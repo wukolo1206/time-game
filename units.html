@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>時分秒換算</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Noto Sans TC', sans-serif; background: #f0f4ff; min-height: 100vh; }
+
+    .nav { display: flex; justify-content: space-between; align-items: center;
+           padding: 10px 16px; background: #fff; border-bottom: 1px solid #e0e0e0; }
+    .nav a { font-size: 14px; color: #666; text-decoration: none; }
+    .nav h2 { font-size: 16px; color: #333; font-weight: bold; }
+
+    .act-bar { display: flex; background: #fff; border-bottom: 2px solid #e8eeff;
+               overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .act-bar::-webkit-scrollbar { display: none; }
+    .act-btn { flex: 1; min-width: 72px; padding: 8px 4px 7px; border: none;
+               background: transparent; font-size: 12px; font-weight: bold;
+               color: #999; cursor: pointer; text-decoration: none;
+               display: flex; flex-direction: column; align-items: center; gap: 2px;
+               border-bottom: 3px solid transparent; transition: color .15s, border-color .15s;
+               -webkit-tap-highlight-color: transparent; white-space: nowrap; }
+    .act-btn .act-icon { font-size: 16px; }
+    .act-btn.act-on { color: #e17055; border-bottom-color: #e17055; background: #fff8f5; }
+
+    .wrap { max-width: 680px; margin: 0 auto; padding: 12px;
+            display: flex; flex-direction: column; gap: 14px; }
+
+    /* Relation cards */
+    .rel-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 400px) { .rel-cards { grid-template-columns: 1fr; } }
+
+    .rel-card { background: #fff; border-radius: 18px; padding: 16px 12px;
+                box-shadow: 0 2px 10px rgba(225,112,85,.12);
+                display: flex; flex-direction: column; align-items: center; gap: 10px; }
+    .rel-title { font-size: 18px; font-weight: bold; color: #333; }
+    .rel-title span { color: #e17055; }
+    canvas { display: block; }
+    .rel-note { font-size: 12px; color: #aaa; text-align: center; line-height: 1.5; }
+
+    /* Play button */
+    .play-btn { border: none; border-radius: 20px; background: #e17055; color: #fff;
+                font-size: 14px; font-weight: bold; padding: 7px 18px; cursor: pointer;
+                -webkit-tap-highlight-color: transparent; }
+    .play-btn:active { opacity: .8; }
+
+    /* Practice section */
+    .section-title { font-size: 13px; font-weight: bold; color: #aaa; letter-spacing: 1px; padding-left: 4px; }
+
+    .quiz-card { background: #fff; border-radius: 20px; padding: 20px;
+                 box-shadow: 0 2px 10px rgba(225,112,85,.12);
+                 display: flex; flex-direction: column; align-items: center; gap: 16px; }
+
+    .prog-dots { display: flex; gap: 8px; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #dde3ff; transition: background .3s; }
+    .dot.done { background: #51cf66; }
+    .dot.cur  { background: #e17055; }
+
+    .quiz-q { font-size: 24px; font-weight: bold; color: #333; text-align: center; }
+    .quiz-q .hl { color: #e17055; }
+    .quiz-unit { font-size: 14px; color: #888; }
+
+    .np-wrap { background: #f8f9ff; border-radius: 20px; padding: 12px; width: 100%; }
+    .np-display { font-size: 36px; font-weight: bold; color: #333; text-align: center;
+                  min-height: 48px; letter-spacing: 4px; margin-bottom: 10px; }
+    .np-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .nk { border: none; border-radius: 12px; font-size: 22px; font-weight: bold;
+          padding: 14px 8px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+    .nk:active { opacity: .75; }
+    .nk.d  { background: #fff; color: #333; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+    .nk.bs { background: #ffe3e3; color: #c92a2a; font-size: 18px; }
+    .nk.ok { background: #51cf66; color: #fff; font-size: 18px; }
+    .nk.ok:disabled { background: #ccc; cursor: default; }
+
+    .result-box { border-radius: 14px; padding: 12px 16px; width: 100%;
+                  text-align: center; display: none; }
+    .result-box.ok  { background: #edfff5; border: 2px solid #51cf66; display: block; }
+    .result-box.err { background: #fff5f5; border: 2px solid #ff6b6b; display: block; }
+    .result-box .rt { font-size: 18px; font-weight: bold; color: #2f9e44; }
+    .result-box.err .rt { color: #c92a2a; }
+
+    .next-btn { border: none; border-radius: 14px; background: #e17055; color: #fff;
+                font-size: 18px; font-weight: bold; padding: 12px 28px;
+                cursor: pointer; display: none; -webkit-tap-highlight-color: transparent; }
+    .next-btn.show { display: inline-block; }
+
+    .done-banner { background: #fff; border-radius: 16px; padding: 20px;
+                   box-shadow: 0 2px 10px rgba(225,112,85,.12); text-align: center;
+                   width: 100%; display: none; }
+    .done-banner.show { display: block; }
+    .done-title { font-size: 22px; font-weight: bold; color: #2f9e44; margin-bottom: 8px; }
+    .done-sub   { font-size: 14px; color: #666; margin-bottom: 14px; }
+    .done-btn   { border: none; border-radius: 14px; background: #e17055; color: #fff;
+                  font-size: 17px; font-weight: bold; padding: 12px 28px; cursor: pointer; }
+  </style>
+</head>
+<body>
+
+<div class="nav">
+  <a href="index.html">← 返回</a>
+  <h2>時分秒換算</h2>
+  <span></span>
+</div>
+<nav class="act-bar">
+  <a class="act-btn" href="day24.html"><span class="act-icon">🕐</span>24小時</a>
+  <a class="act-btn act-on" href="units.html"><span class="act-icon">⏱️</span>時分秒</a>
+  <a class="act-btn" href="calc.html"><span class="act-icon">🧮</span>加減計算</a>
+</nav>
+
+<div class="wrap">
+
+  <!-- Visual relationship cards -->
+  <div class="rel-cards">
+    <!-- 1小時 = 60分 -->
+    <div class="rel-card">
+      <div class="rel-title">1小時 ＝ <span>60</span>分鐘</div>
+      <canvas id="c60m" width="140" height="140"></canvas>
+      <button class="play-btn" onclick="animate60(c60mCtx, '#e17055')">▶ 播放</button>
+      <div class="rel-note">分針繞一圈<br>＝ 60分鐘 ＝ 1小時</div>
+    </div>
+    <!-- 1分鐘 = 60秒 -->
+    <div class="rel-card">
+      <div class="rel-title">1分鐘 ＝ <span>60</span>秒</div>
+      <canvas id="c60s" width="140" height="140"></canvas>
+      <button class="play-btn" onclick="animate60(c60sCtx, '#0984e3')">▶ 播放</button>
+      <div class="rel-note">秒針繞一圈<br>＝ 60秒 ＝ 1分鐘</div>
+    </div>
+  </div>
+
+  <!-- Practice -->
+  <div class="section-title">換算練習</div>
+  <div class="quiz-card">
+    <div class="prog-dots" id="progDots"></div>
+    <div class="quiz-q" id="quizQ"></div>
+    <div class="quiz-unit" id="quizUnit"></div>
+    <div class="np-wrap">
+      <div class="np-display" id="npDisp">—</div>
+      <div class="np-grid">
+        <button class="nk d" onclick="npKey(7)">7</button>
+        <button class="nk d" onclick="npKey(8)">8</button>
+        <button class="nk d" onclick="npKey(9)">9</button>
+        <button class="nk d" onclick="npKey(4)">4</button>
+        <button class="nk d" onclick="npKey(5)">5</button>
+        <button class="nk d" onclick="npKey(6)">6</button>
+        <button class="nk d" onclick="npKey(1)">1</button>
+        <button class="nk d" onclick="npKey(2)">2</button>
+        <button class="nk d" onclick="npKey(3)">3</button>
+        <button class="nk bs" onclick="npBack()">⌫</button>
+        <button class="nk d" onclick="npKey(0)">0</button>
+        <button class="nk ok" id="okBtn" onclick="npConfirm()" disabled>✓</button>
+      </div>
+    </div>
+    <div class="result-box" id="resultBox">
+      <div class="rt" id="resultTitle"></div>
+    </div>
+    <button class="next-btn" id="nextBtn" onclick="nextQ()">下一題 →</button>
+    <div class="done-banner" id="doneBanner">
+      <div class="done-title">全部答對！</div>
+      <div class="done-sub">時、分、秒的換算，你已經學會了！</div>
+      <button class="done-btn" onclick="restart()">再練一次</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── 60-dot ring animation ─────────────────────────────────
+  const c60mEl  = document.getElementById('c60m');
+  const c60sEl  = document.getElementById('c60s');
+  const c60mCtx = c60mEl.getContext('2d');
+  const c60sCtx = c60sEl.getContext('2d');
+
+  function draw60Ring(ctx, filled, color, total) {
+    const W = 140, cx = 70, cy = 70, R = 58;
+    ctx.clearRect(0, 0, W, W);
+
+    for (let i = 0; i < total; i++) {
+      const a = -Math.PI/2 + i * Math.PI*2/total;
+      const x = cx + R * Math.cos(a);
+      const y = cy + R * Math.sin(a);
+      ctx.beginPath();
+      ctx.arc(x, y, 4, 0, Math.PI*2);
+      ctx.fillStyle = i < filled ? color : '#e8eeff';
+      ctx.fill();
+    }
+
+    // Count label
+    ctx.fillStyle = color;
+    ctx.font = 'bold 26px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(filled, cx, cy - 8);
+    ctx.fillStyle = '#aaa';
+    ctx.font = '12px sans-serif';
+    ctx.fillText(filled === total ? '完成！' : '/ ' + total, cx, cy + 12);
+  }
+
+  let animId60m = null, animId60s = null;
+
+  function animate60(ctx, color) {
+    if (animId60m && ctx === c60mCtx) { cancelAnimationFrame(animId60m); }
+    if (animId60s && ctx === c60sCtx) { cancelAnimationFrame(animId60s); }
+
+    let count = 0;
+    const total = 60;
+    const delay = 30; // ms per dot
+    let lastTime = 0;
+
+    function tick(ts) {
+      if (ts - lastTime >= delay) {
+        lastTime = ts;
+        count++;
+        draw60Ring(ctx, count, color, total);
+        if (count >= total) return;
+      }
+      const id = requestAnimationFrame(tick);
+      if (ctx === c60mCtx) animId60m = id;
+      else animId60s = id;
+    }
+
+    draw60Ring(ctx, 0, color, total);
+    requestAnimationFrame(tick);
+  }
+
+  // Initial draw
+  draw60Ring(c60mCtx, 60, '#e17055', 60);
+  draw60Ring(c60sCtx, 60, '#0984e3', 60);
+
+  // ── Practice quiz ─────────────────────────────────────────
+  const PROBS = [
+    { q: '1 小時 = <span class="hl">?</span> 分鐘',   ans: 60,  label: '分鐘' },
+    { q: '2 小時 = <span class="hl">?</span> 分鐘',   ans: 120, label: '分鐘' },
+    { q: '3 小時 = <span class="hl">?</span> 分鐘',   ans: 180, label: '分鐘' },
+    { q: '60 分鐘 = <span class="hl">?</span> 小時',  ans: 1,   label: '小時' },
+    { q: '120 分鐘 = <span class="hl">?</span> 小時', ans: 2,   label: '小時' },
+    { q: '1 分鐘 = <span class="hl">?</span> 秒',     ans: 60,  label: '秒' },
+    { q: '3 分鐘 = <span class="hl">?</span> 秒',     ans: 180, label: '秒' },
+    { q: '60 秒 = <span class="hl">?</span> 分鐘',    ans: 1,   label: '分鐘' },
+  ];
+
+  let qIdx = 0, input = '', phase = 'answering';
+
+  function loadQ() {
+    const p = PROBS[qIdx];
+    input = ''; phase = 'answering';
+    document.getElementById('quizQ').innerHTML = p.q;
+    document.getElementById('quizUnit').textContent = '（單位：' + p.label + '）';
+    document.getElementById('resultBox').className = 'result-box';
+    document.getElementById('nextBtn').className = 'next-btn';
+    document.getElementById('doneBanner').className = 'done-banner';
+    updateNp();
+    renderDots();
+  }
+
+  function renderDots() {
+    const el = document.getElementById('progDots');
+    el.innerHTML = '';
+    PROBS.forEach((_, i) => {
+      const d = document.createElement('div');
+      d.className = 'dot' + (i < qIdx ? ' done' : i === qIdx ? ' cur' : '');
+      el.appendChild(d);
+    });
+  }
+
+  function npKey(d) {
+    if (phase !== 'answering' || input.length >= 3) return;
+    input += d; updateNp();
+  }
+  function npBack() {
+    if (phase !== 'answering') return;
+    input = input.slice(0,-1); updateNp();
+  }
+  function updateNp() {
+    document.getElementById('npDisp').textContent = input || '—';
+    document.getElementById('okBtn').disabled = input === '' || phase !== 'answering';
+  }
+
+  function npConfirm() {
+    if (phase !== 'answering' || !input) return;
+    const p = PROBS[qIdx];
+    const rb = document.getElementById('resultBox');
+    if (parseInt(input) === p.ans) {
+      phase = 'correct';
+      rb.className = 'result-box ok';
+      document.getElementById('resultTitle').textContent = '✓ 答對！答案是 ' + p.ans + ' ' + p.label;
+      const isLast = qIdx >= PROBS.length - 1;
+      setTimeout(() => {
+        document.getElementById('nextBtn').className = isLast ? 'next-btn' : 'next-btn show';
+        if (isLast) setTimeout(() => { document.getElementById('doneBanner').className = 'done-banner show'; }, 300);
+      }, 300);
+    } else {
+      rb.className = 'result-box err';
+      document.getElementById('resultTitle').textContent = '× 再想想看！';
+    }
+    input = ''; updateNp();
+  }
+
+  function nextQ() { qIdx++; if (qIdx < PROBS.length) loadQ(); }
+  function restart() { qIdx = 0; loadQ(); }
+
+  loadQ();
+</script>
+</body>
+</html>

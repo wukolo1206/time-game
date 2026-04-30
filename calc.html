@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>時分加減計算</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Noto Sans TC', sans-serif; background: #f0f4ff; min-height: 100vh; }
+
+    .nav { display: flex; justify-content: space-between; align-items: center;
+           padding: 10px 16px; background: #fff; border-bottom: 1px solid #e0e0e0; }
+    .nav a { font-size: 14px; color: #666; text-decoration: none; }
+    .nav h2 { font-size: 16px; color: #333; font-weight: bold; }
+
+    .act-bar { display: flex; background: #fff; border-bottom: 2px solid #e8eeff;
+               overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .act-bar::-webkit-scrollbar { display: none; }
+    .act-btn { flex: 1; min-width: 72px; padding: 8px 4px 7px; border: none;
+               background: transparent; font-size: 12px; font-weight: bold;
+               color: #999; cursor: pointer; text-decoration: none;
+               display: flex; flex-direction: column; align-items: center; gap: 2px;
+               border-bottom: 3px solid transparent; transition: color .15s, border-color .15s;
+               -webkit-tap-highlight-color: transparent; white-space: nowrap; }
+    .act-btn .act-icon { font-size: 16px; }
+    .act-btn.act-on { color: #6c5ce7; border-bottom-color: #6c5ce7; background: #f5f3ff; }
+
+    .wrap { max-width: 780px; margin: 0 auto; padding: 12px;
+            display: flex; flex-direction: column; gap: 12px; }
+
+    .main-cols { display: flex; flex-direction: column; gap: 12px; }
+    @media (min-width: 560px) {
+      .main-cols { flex-direction: row; align-items: flex-start; }
+      .left-col  { flex: 1; display: flex; flex-direction: column; gap: 12px; }
+      .right-col { width: 230px; flex-shrink: 0; display: flex; flex-direction: column; gap: 12px; }
+    }
+
+    /* Problem card */
+    .prob-card { background: #fff; border-radius: 20px; padding: 20px 16px;
+                 box-shadow: 0 2px 12px rgba(108,92,231,.12);
+                 display: flex; flex-direction: column; align-items: center; gap: 16px; }
+
+    .prog-dots { display: flex; gap: 8px; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #dde3ff; transition: background .3s; }
+    .dot.done { background: #51cf66; }
+    .dot.cur  { background: #6c5ce7; }
+
+    /* Problem text */
+    .prob-text { font-size: 22px; font-weight: bold; color: #333; text-align: center;
+                 line-height: 1.6; }
+    .prob-text .op  { color: #6c5ce7; }
+    .prob-text .num { color: #333; }
+    .prob-text .unk { color: #e17055; }
+
+    /* Clocks row */
+    .clocks-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: center; }
+    .clock-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .clock-label { font-size: 12px; color: #888; font-weight: bold; }
+    canvas { display: block; }
+
+    .arrow-mid { font-size: 28px; color: #ccc; font-weight: bold; }
+
+    /* Answer input state */
+    .ans-prompt { font-size: 16px; color: #666; text-align: center; min-height: 28px; }
+    .ans-display { font-size: 28px; font-weight: bold; text-align: center; color: #6c5ce7;
+                   letter-spacing: 2px; min-height: 36px; }
+    .ans-display .filed { color: #2f9e44; }
+    .ans-display .active { color: #e17055; }
+    .ans-display .blank  { color: #ccc; }
+
+    /* Hint / result */
+    .hint-box { background: #f5f3ff; border-radius: 12px; padding: 10px 14px;
+                font-size: 14px; color: #6c5ce7; text-align: center; min-height: 40px;
+                display: flex; align-items: center; justify-content: center; }
+
+    .result-box { border-radius: 14px; padding: 12px 16px; text-align: center; display: none; }
+    .result-box.ok  { background: #edfff5; border: 2px solid #51cf66; display: block; }
+    .result-box.err { background: #fff5f5; border: 2px solid #ff6b6b; display: block; }
+    .result-box .rt { font-size: 18px; font-weight: bold; color: #2f9e44; }
+    .result-box.err .rt { color: #c92a2a; }
+    .result-box .rs { font-size: 13px; color: #666; margin-top: 4px; }
+
+    /* Numpad */
+    .np-wrap { background: #fff; border-radius: 20px; padding: 12px;
+               box-shadow: 0 2px 12px rgba(108,92,231,.12); }
+    .np-display { font-size: 36px; font-weight: bold; color: #333; text-align: center;
+                  min-height: 48px; letter-spacing: 4px; margin-bottom: 10px; }
+    .np-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .nk { border: none; border-radius: 12px; font-size: 22px; font-weight: bold;
+          padding: 14px 8px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+    .nk:active { opacity: .75; }
+    .nk.d  { background: #f1f3ff; color: #333; }
+    .nk.bs { background: #ffe3e3; color: #c92a2a; font-size: 18px; }
+    .nk.ok { background: #51cf66; color: #fff; font-size: 18px; }
+    .nk.ok:disabled { background: #ccc; cursor: default; }
+
+    .next-btn { border: none; border-radius: 14px; background: #6c5ce7; color: #fff;
+                font-size: 18px; font-weight: bold; padding: 12px 28px;
+                cursor: pointer; display: none; -webkit-tap-highlight-color: transparent;
+                align-self: center; }
+    .next-btn.show { display: inline-block; }
+
+    .done-banner { background: #fff; border-radius: 16px; padding: 20px;
+                   box-shadow: 0 2px 12px rgba(108,92,231,.12); text-align: center;
+                   display: none; }
+    .done-banner.show { display: block; }
+    .done-title { font-size: 22px; font-weight: bold; color: #2f9e44; margin-bottom: 8px; }
+    .done-sub   { font-size: 14px; color: #666; margin-bottom: 14px; line-height: 1.6; }
+    .done-btn   { border: none; border-radius: 14px; background: #6c5ce7; color: #fff;
+                  font-size: 17px; font-weight: bold; padding: 12px 28px; cursor: pointer; }
+
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      25%     { transform: translateX(-7px); }
+      75%     { transform: translateX(7px); }
+    }
+  </style>
+</head>
+<body>
+
+<div class="nav">
+  <a href="index.html">← 返回</a>
+  <h2>時分加減計算</h2>
+  <span></span>
+</div>
+<nav class="act-bar">
+  <a class="act-btn" href="day24.html"><span class="act-icon">🕐</span>24小時</a>
+  <a class="act-btn" href="units.html"><span class="act-icon">⏱️</span>時分秒</a>
+  <a class="act-btn act-on" href="calc.html"><span class="act-icon">🧮</span>加減計算</a>
+</nav>
+
+<div class="wrap">
+  <div class="main-cols">
+    <!-- Left: clocks + problem -->
+    <div class="left-col">
+      <div class="prob-card">
+        <div class="prog-dots" id="progDots"></div>
+        <div class="prob-text" id="probText"></div>
+
+        <div class="clocks-row">
+          <div class="clock-wrap">
+            <div class="clock-label">開始時間</div>
+            <canvas id="cvsStart" width="150" height="150"></canvas>
+          </div>
+          <div class="arrow-mid">→</div>
+          <div class="clock-wrap">
+            <div class="clock-label" id="endLabel">結束時間</div>
+            <canvas id="cvsEnd" width="150" height="150"></canvas>
+          </div>
+        </div>
+
+        <div class="ans-display" id="ansDisplay"></div>
+        <div class="result-box" id="resultBox">
+          <div class="rt" id="resultTitle"></div>
+          <div class="rs" id="resultSub"></div>
+        </div>
+        <button class="next-btn" id="nextBtn" onclick="nextProblem()">下一題 →</button>
+      </div>
+    </div>
+
+    <!-- Right: hint + numpad + done -->
+    <div class="right-col">
+      <div class="hint-box" id="hintBox">請輸入答案</div>
+      <div class="np-wrap">
+        <div class="np-display" id="npDisp">—</div>
+        <div class="np-grid">
+          <button class="nk d" onclick="npKey(7)">7</button>
+          <button class="nk d" onclick="npKey(8)">8</button>
+          <button class="nk d" onclick="npKey(9)">9</button>
+          <button class="nk d" onclick="npKey(4)">4</button>
+          <button class="nk d" onclick="npKey(5)">5</button>
+          <button class="nk d" onclick="npKey(6)">6</button>
+          <button class="nk d" onclick="npKey(1)">1</button>
+          <button class="nk d" onclick="npKey(2)">2</button>
+          <button class="nk d" onclick="npKey(3)">3</button>
+          <button class="nk bs" onclick="npBack()">⌫</button>
+          <button class="nk d" onclick="npKey(0)">0</button>
+          <button class="nk ok" id="okBtn" onclick="npConfirm()" disabled>✓</button>
+        </div>
+      </div>
+      <div class="done-banner" id="doneBanner">
+        <div class="done-title">全部答對！</div>
+        <div class="done-sub">時分加減，包含跨越整點的計算，你都懂了！</div>
+        <button class="done-btn" onclick="location.reload()">再練一次</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── Problems ───────────────────────────────────────────────
+  // sH/sM = start H:M, eH/eM = end H:M, delta shown in text
+  const PROBS = [
+    { text: '8 時 20 分  ＋  30 分  ＝ ？',
+      sH:8, sM:20, eH:8, eM:50,  typeLabel: '加法（不跨整點）' },
+    { text: '7 時 40 分  ＋  35 分  ＝ ？',
+      sH:7, sM:40, eH:8, eM:15,  typeLabel: '加法（跨越整點）' },
+    { text: '10 時 50 分  ＋  25 分  ＝ ？',
+      sH:10, sM:50, eH:11, eM:15, typeLabel: '加法（跨越整點）' },
+    { text: '11 時 30 分  ＋  1小時 20 分  ＝ ？',
+      sH:11, sM:30, eH:12, eM:50, typeLabel: '加1小時以上' },
+    { text: '9 時 15 分  －  40 分  ＝ ？',
+      sH:9, sM:15, eH:8, eM:35,  typeLabel: '減法（借位）' },
+    { text: '10 時 5 分  －  30 分  ＝ ？',
+      sH:10, sM:5, eH:9, eM:35,  typeLabel: '減法（借位）' },
+  ];
+
+  let cur = 0, input = '', ansStep = 'hour', ansH = null;
+  // ansStep: 'hour' → enter hour, 'min' → enter minute
+
+  // ── Clock drawing ──────────────────────────────────────────
+  const CX = 75, CY = 75, R = 68;
+
+  function drawClock(ctx, h, m, style) {
+    // style: 'start' | 'unknown' | 'answer'
+    ctx.clearRect(0, 0, 150, 150);
+
+    // Face
+    ctx.beginPath();
+    ctx.arc(CX, CY, R, 0, Math.PI*2);
+    ctx.fillStyle = style === 'answer' ? '#f3fdf5' : style === 'unknown' ? '#f8f9ff' : '#fff';
+    ctx.fill();
+    ctx.strokeStyle = style === 'answer' ? '#51cf66' : style === 'unknown' ? '#dde3ff' : '#dde3ff';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    // Hour tick marks and numbers
+    for (let i = 1; i <= 12; i++) {
+      const a = -Math.PI/2 + i * Math.PI/6;
+      // Tick
+      ctx.beginPath();
+      ctx.moveTo(CX + (R-6)*Math.cos(a), CY + (R-6)*Math.sin(a));
+      ctx.lineTo(CX + R*Math.cos(a),     CY + R*Math.sin(a));
+      ctx.strokeStyle = '#ccc';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      // Number
+      ctx.fillStyle = '#888';
+      ctx.font = 'bold 10px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(i, CX + (R-18)*Math.cos(a), CY + (R-18)*Math.sin(a));
+    }
+
+    // Minute ticks
+    for (let i = 0; i < 60; i++) {
+      if (i % 5 === 0) continue;
+      const a = -Math.PI/2 + i * Math.PI*2/60;
+      ctx.beginPath();
+      ctx.moveTo(CX + (R-3)*Math.cos(a), CY + (R-3)*Math.sin(a));
+      ctx.lineTo(CX + R*Math.cos(a),     CY + R*Math.sin(a));
+      ctx.strokeStyle = '#e8eeff';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+
+    if (style === 'unknown') {
+      // Show ?
+      ctx.fillStyle = '#bbb';
+      ctx.font = 'bold 32px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('?', CX, CY);
+      return;
+    }
+
+    // Hour hand
+    const ha = -Math.PI/2 + (h % 12 + m/60) * Math.PI/6;
+    ctx.beginPath();
+    ctx.moveTo(CX - 6*Math.cos(ha), CY - 6*Math.sin(ha));
+    ctx.lineTo(CX + R*0.52*Math.cos(ha), CY + R*0.52*Math.sin(ha));
+    ctx.strokeStyle = '#333';
+    ctx.lineWidth = 5;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+
+    // Minute hand
+    const ma = -Math.PI/2 + m * Math.PI/30;
+    ctx.beginPath();
+    ctx.moveTo(CX - 8*Math.cos(ma), CY - 8*Math.sin(ma));
+    ctx.lineTo(CX + R*0.78*Math.cos(ma), CY + R*0.78*Math.sin(ma));
+    ctx.strokeStyle = style === 'answer' ? '#2f9e44' : '#6c5ce7';
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+
+    // Center dot
+    ctx.beginPath();
+    ctx.arc(CX, CY, 5, 0, Math.PI*2);
+    ctx.fillStyle = '#333';
+    ctx.fill();
+  }
+
+  function animateClock(fromH, fromM, toH, toM) {
+    const ctx = document.getElementById('cvsEnd').getContext('2d');
+    const fromTotal = fromH * 60 + fromM;
+    const toTotal   = toH   * 60 + toM;
+    const t0 = performance.now();
+    const dur = 900;
+
+    function tick(ts) {
+      const t = Math.min(1, (ts - t0) / dur);
+      const e = 1 - Math.pow(1 - t, 2);
+      const cur = fromTotal + (toTotal - fromTotal) * e;
+      const ch = Math.floor(cur / 60), cm = cur % 60;
+      drawClock(ctx, ch, cm, 'answer');
+      if (t < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+
+  // ── Load problem ───────────────────────────────────────────
+  function loadProblem() {
+    const p = PROBS[cur];
+    input = ''; ansStep = 'hour'; ansH = null;
+
+    document.getElementById('probText').textContent = p.text;
+    document.getElementById('resultBox').className = 'result-box';
+    document.getElementById('nextBtn').className = 'next-btn';
+    document.getElementById('doneBanner').className = 'done-banner';
+
+    const sCtx = document.getElementById('cvsStart').getContext('2d');
+    const eCtx = document.getElementById('cvsEnd').getContext('2d');
+    drawClock(sCtx, p.sH, p.sM, 'start');
+    drawClock(eCtx, 0, 0, 'unknown');
+
+    updateNp();
+    updateAnsDisplay();
+    renderDots();
+    document.getElementById('hintBox').textContent = p.typeLabel + '，先算幾時，再算幾分';
+    document.getElementById('hintBox').style.display = '';
+  }
+
+  function renderDots() {
+    const el = document.getElementById('progDots');
+    el.innerHTML = '';
+    PROBS.forEach((_, i) => {
+      const d = document.createElement('div');
+      d.className = 'dot' + (i < cur ? ' done' : i === cur ? ' cur' : '');
+      el.appendChild(d);
+    });
+  }
+
+  function updateAnsDisplay() {
+    const hPart = ansH !== null
+      ? '<span class="filed">' + String(ansH) + ' 時</span>'
+      : (ansStep === 'hour'
+          ? '<span class="active">? 時</span>'
+          : '<span class="blank">? 時</span>');
+    const mPart = ansStep === 'min'
+      ? '<span class="active">? 分</span>'
+      : '<span class="blank">? 分</span>';
+    document.getElementById('ansDisplay').innerHTML = '答案：' + hPart + ' ' + mPart;
+
+    const prompt = ansStep === 'hour' ? '先輸入「幾時」' : '再輸入「幾分」';
+    document.getElementById('hintBox').textContent = prompt;
+  }
+
+  // ── Numpad ─────────────────────────────────────────────────
+  function npKey(d) {
+    if (input.length >= 2) return;
+    input += d; updateNp();
+  }
+  function npBack() {
+    input = input.slice(0,-1); updateNp();
+  }
+  function updateNp() {
+    document.getElementById('npDisp').textContent = input || '—';
+    document.getElementById('okBtn').disabled = input === '';
+  }
+
+  function npConfirm() {
+    if (!input) return;
+    const val = parseInt(input);
+    input = ''; updateNp();
+
+    const p = PROBS[cur];
+    const rb = document.getElementById('resultBox');
+
+    if (ansStep === 'hour') {
+      ansH = val;
+      ansStep = 'min';
+      updateAnsDisplay();
+    } else {
+      // Check both
+      const ansM = val;
+      if (ansH === p.eH && ansM === p.eM) {
+        // Correct!
+        rb.className = 'result-box ok';
+        document.getElementById('resultTitle').textContent = '✓ 答對了！';
+        document.getElementById('resultSub').textContent =
+          p.text.replace('？', p.eH + ' 時 ' + p.eM + ' 分');
+        document.getElementById('hintBox').style.display = 'none';
+        animateClock(p.sH, p.sM, p.eH, p.eM);
+        const isLast = cur >= PROBS.length - 1;
+        setTimeout(() => {
+          document.getElementById('nextBtn').className = isLast ? 'next-btn' : 'next-btn show';
+          if (isLast) setTimeout(() => { document.getElementById('doneBanner').className = 'done-banner show'; }, 300);
+        }, 500);
+        document.getElementById('ansDisplay').innerHTML =
+          '答案：<span class="filed">' + p.eH + ' 時 ' + p.eM + ' 分</span>';
+      } else {
+        // Wrong
+        rb.className = 'result-box err';
+        document.getElementById('resultTitle').textContent = '× 再想想看！';
+        document.getElementById('resultSub').textContent =
+          (ansH !== p.eH ? '時的部分要再想一下 ' : '') +
+          (ansM !== p.eM ? '分的部分要再想一下' : '');
+        // Reset answer step
+        ansH = null; ansStep = 'hour';
+        updateAnsDisplay();
+        const rb2 = document.getElementById('resultBox');
+        setTimeout(() => { rb2.className = 'result-box'; }, 1500);
+      }
+    }
+  }
+
+  function nextProblem() {
+    cur++;
+    if (cur < PROBS.length) loadProblem();
+  }
+
+  loadProblem();
+</script>
+</body>
+</html>

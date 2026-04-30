@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>一日24小時</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Noto Sans TC', sans-serif; background: #f0f4ff; min-height: 100vh; }
+
+    .nav { display: flex; justify-content: space-between; align-items: center;
+           padding: 10px 16px; background: #fff; border-bottom: 1px solid #e0e0e0; }
+    .nav a { font-size: 14px; color: #666; text-decoration: none; }
+    .nav h2 { font-size: 16px; color: #333; font-weight: bold; }
+
+    .act-bar { display: flex; background: #fff; border-bottom: 2px solid #e8eeff;
+               overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .act-bar::-webkit-scrollbar { display: none; }
+    .act-btn { flex: 1; min-width: 72px; padding: 8px 4px 7px; border: none;
+               background: transparent; font-size: 12px; font-weight: bold;
+               color: #999; cursor: pointer; text-decoration: none;
+               display: flex; flex-direction: column; align-items: center; gap: 2px;
+               border-bottom: 3px solid transparent; transition: color .15s, border-color .15s;
+               -webkit-tap-highlight-color: transparent; white-space: nowrap; }
+    .act-btn .act-icon { font-size: 16px; }
+    .act-btn.act-on { color: #0984e3; border-bottom-color: #0984e3; background: #f0f8ff; }
+
+    .wrap { max-width: 680px; margin: 0 auto; padding: 12px;
+            display: flex; flex-direction: column; gap: 12px; }
+
+    /* Mode tabs */
+    .tabs { display: flex; gap: 8px; }
+    .tab { flex: 1; border: 2px solid #dde3ff; background: #fff; border-radius: 12px;
+           font-size: 15px; font-weight: bold; color: #888; padding: 10px;
+           cursor: pointer; -webkit-tap-highlight-color: transparent; }
+    .tab.on { background: #0984e3; border-color: #0984e3; color: #fff; }
+
+    /* Explore mode */
+    .dial-card { background: #fff; border-radius: 20px; padding: 16px 12px 20px;
+                 box-shadow: 0 2px 12px rgba(9,132,227,.12);
+                 display: flex; flex-direction: column; align-items: center; gap: 14px; }
+    canvas { display: block; touch-action: none; }
+
+    .time-info { text-align: center; min-height: 80px; width: 100%; }
+    .time-main { font-size: 28px; font-weight: bold; color: #333; margin-bottom: 6px; }
+    .time-24 { font-size: 18px; color: #0984e3; font-weight: bold; margin-bottom: 4px; }
+    .time-note { font-size: 13px; color: #aaa; }
+    .time-prompt { font-size: 16px; color: #bbb; margin-top: 8px; }
+
+    /* Legend */
+    .legend { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+    .leg-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: #666; }
+    .leg-dot { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
+
+    /* Quiz mode */
+    .quiz-card { background: #fff; border-radius: 20px; padding: 24px 20px;
+                 box-shadow: 0 2px 12px rgba(9,132,227,.12);
+                 display: flex; flex-direction: column; align-items: center; gap: 18px; }
+
+    .prog-dots { display: flex; gap: 8px; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #dde3ff; transition: background .3s; }
+    .dot.done { background: #51cf66; }
+    .dot.cur  { background: #0984e3; }
+
+    .quiz-q { font-size: 22px; font-weight: bold; color: #333; text-align: center;
+              line-height: 1.5; }
+    .quiz-q .hl { color: #0984e3; }
+
+    .hint-box { background: #f0f8ff; border-radius: 12px; padding: 10px 16px;
+                font-size: 14px; color: #666; text-align: center; width: 100%; }
+
+    .np-wrap { background: #f8f9ff; border-radius: 20px; padding: 12px; width: 100%; }
+    .np-display { font-size: 36px; font-weight: bold; color: #333; text-align: center;
+                  min-height: 48px; letter-spacing: 4px; margin-bottom: 10px; }
+    .np-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .nk { border: none; border-radius: 12px; font-size: 22px; font-weight: bold;
+          padding: 14px 8px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+    .nk:active { opacity: .75; }
+    .nk.d  { background: #fff; color: #333; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+    .nk.bs { background: #ffe3e3; color: #c92a2a; font-size: 18px; }
+    .nk.ok { background: #51cf66; color: #fff; font-size: 18px; }
+    .nk.ok:disabled { background: #ccc; cursor: default; }
+
+    .result-box { border-radius: 14px; padding: 12px 16px; width: 100%;
+                  text-align: center; display: none; }
+    .result-box.ok  { background: #edfff5; border: 2px solid #51cf66; display: block; }
+    .result-box.err { background: #fff5f5; border: 2px solid #ff6b6b; display: block; }
+    .result-box .rt { font-size: 18px; font-weight: bold; color: #2f9e44; }
+    .result-box.err .rt { color: #c92a2a; }
+    .result-box .rs { font-size: 14px; color: #666; margin-top: 4px; }
+
+    .next-btn { border: none; border-radius: 14px; background: #0984e3; color: #fff;
+                font-size: 18px; font-weight: bold; padding: 13px 28px;
+                cursor: pointer; display: none; -webkit-tap-highlight-color: transparent; }
+    .next-btn.show { display: inline-block; }
+
+    .done-banner { background: #fff; border-radius: 16px; padding: 20px;
+                   box-shadow: 0 2px 12px rgba(9,132,227,.13); text-align: center;
+                   width: 100%; display: none; }
+    .done-banner.show { display: block; }
+    .done-title { font-size: 24px; font-weight: bold; color: #2f9e44; margin-bottom: 8px; }
+    .done-sub   { font-size: 15px; color: #666; margin-bottom: 14px; line-height: 1.6; }
+    .done-btn   { border: none; border-radius: 14px; background: #0984e3; color: #fff;
+                  font-size: 18px; font-weight: bold; padding: 12px 28px; cursor: pointer; }
+
+    @keyframes popIn {
+      0%   { transform: scale(.5); opacity: 0; }
+      70%  { transform: scale(1.15); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      25%     { transform: translateX(-8px); }
+      75%     { transform: translateX(8px); }
+    }
+  </style>
+</head>
+<body>
+
+<div class="nav">
+  <a href="index.html">← 返回</a>
+  <h2>一日24小時</h2>
+  <span></span>
+</div>
+<nav class="act-bar">
+  <a class="act-btn act-on" href="day24.html"><span class="act-icon">🕐</span>24小時</a>
+  <a class="act-btn" href="units.html"><span class="act-icon">⏱️</span>時分秒</a>
+  <a class="act-btn" href="calc.html"><span class="act-icon">🧮</span>加減計算</a>
+</nav>
+
+<div class="wrap">
+  <div class="tabs">
+    <button class="tab on" id="tabEx" onclick="setMode('explore')">🔍 探索</button>
+    <button class="tab"    id="tabQz" onclick="setMode('quiz')">✏️ 練習</button>
+  </div>
+
+  <!-- Explore mode -->
+  <div id="explorePane">
+    <div class="dial-card">
+      <canvas id="dial" width="280" height="280"></canvas>
+      <div class="time-info" id="timeInfo">
+        <div class="time-prompt">點一下圓盤，選取時間</div>
+      </div>
+      <div class="legend">
+        <div class="leg-item"><div class="leg-dot" style="background:#1e3799"></div>凌晨 (0–5時)</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#74b9ff"></div>上午 (6–11時)</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#ffd32a"></div>中午 (12時)</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#e17055"></div>下午 (13–18時)</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#6c5ce7"></div>晚上 (19–23時)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quiz mode -->
+  <div id="quizPane" style="display:none">
+    <div class="quiz-card">
+      <div class="prog-dots" id="progDots"></div>
+      <div class="quiz-q" id="quizQ"></div>
+      <div class="hint-box" id="hintBox"></div>
+      <div class="np-wrap">
+        <div class="np-display" id="npDisp">—</div>
+        <div class="np-grid">
+          <button class="nk d" onclick="npKey(7)">7</button>
+          <button class="nk d" onclick="npKey(8)">8</button>
+          <button class="nk d" onclick="npKey(9)">9</button>
+          <button class="nk d" onclick="npKey(4)">4</button>
+          <button class="nk d" onclick="npKey(5)">5</button>
+          <button class="nk d" onclick="npKey(6)">6</button>
+          <button class="nk d" onclick="npKey(1)">1</button>
+          <button class="nk d" onclick="npKey(2)">2</button>
+          <button class="nk d" onclick="npKey(3)">3</button>
+          <button class="nk bs" onclick="npBack()">⌫</button>
+          <button class="nk d" onclick="npKey(0)">0</button>
+          <button class="nk ok" id="okBtn" onclick="npConfirm()" disabled>✓</button>
+        </div>
+      </div>
+      <div class="result-box" id="resultBox">
+        <div class="rt" id="resultTitle"></div>
+        <div class="rs" id="resultSub"></div>
+      </div>
+      <button class="next-btn" id="nextBtn" onclick="nextQ()">下一題 →</button>
+      <div class="done-banner" id="doneBanner">
+        <div class="done-title">全部答對！</div>
+        <div class="done-sub">上午、下午和24小時制的轉換，你已經懂了！</div>
+        <button class="done-btn" onclick="restartQuiz()">再練一次</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── Dial setup ────────────────────────────────────────────
+  const cvs = document.getElementById('dial');
+  const ctx = cvs.getContext('2d');
+  const CX = 140, CY = 140, R_OUT = 128, R_IN = 50;
+
+  const ZONE_COLORS = [
+    '#1e3799','#1e3799','#1e3799','#1e3799','#1e3799','#1e3799', // 0-5 凌晨
+    '#74b9ff','#74b9ff','#74b9ff','#74b9ff','#74b9ff','#74b9ff', // 6-11 上午
+    '#ffd32a',                                                      // 12 中午
+    '#e17055','#e17055','#e17055','#e17055','#e17055','#e17055',  // 13-18 下午
+    '#6c5ce7','#6c5ce7','#6c5ce7','#6c5ce7','#6c5ce7',           // 19-23 晚上
+  ];
+
+  const TEXT_COLORS = [
+    '#fff','#fff','#fff','#fff','#fff','#fff',
+    '#333','#333','#333','#333','#333','#333',
+    '#333',
+    '#fff','#fff','#fff','#fff','#fff','#fff',
+    '#fff','#fff','#fff','#fff','#fff',
+  ];
+
+  let selectedHour = -1;
+
+  function getTimeLabel(h) {
+    if (h === 0)  return { period: '凌晨', twelve: 12, note: '= 0 時（24小時制）' };
+    if (h < 6)    return { period: '凌晨', twelve: h,  note: '= ' + h + ' 時（24小時制）' };
+    if (h < 12)   return { period: '上午', twelve: h,  note: '= ' + h + ' 時（24小時制）' };
+    if (h === 12) return { period: '中午', twelve: 12, note: '= 12 時（24小時制）' };
+    if (h < 19)   return { period: '下午', twelve: h-12, note: '= ' + h + ' 時（24小時制）' };
+    return        { period: '晚上', twelve: h-12, note: '= ' + h + ' 時（24小時制）' };
+  }
+
+  function drawDial(sel) {
+    ctx.clearRect(0, 0, 280, 280);
+
+    for (let h = 0; h < 24; h++) {
+      const a0 = -Math.PI/2 + h * Math.PI*2/24;
+      const a1 = a0 + Math.PI*2/24;
+
+      ctx.beginPath();
+      ctx.moveTo(CX, CY);
+      ctx.arc(CX, CY, R_OUT, a0, a1);
+      ctx.closePath();
+      ctx.fillStyle = ZONE_COLORS[h];
+      ctx.globalAlpha = (sel === h) ? 1 : 0.72;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+
+      if (sel === h) {
+        ctx.beginPath();
+        ctx.moveTo(CX, CY);
+        ctx.arc(CX, CY, R_OUT+4, a0-0.02, a1+0.02);
+        ctx.closePath();
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+      }
+
+      // Hour label
+      const midA = a0 + Math.PI/24;
+      const lr = R_IN + (R_OUT - R_IN) * 0.6;
+      const lx = CX + lr * Math.cos(midA);
+      const ly = CY + lr * Math.sin(midA);
+      ctx.fillStyle = TEXT_COLORS[h];
+      ctx.font = sel === h ? 'bold 12px sans-serif' : '11px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(h, lx, ly);
+    }
+
+    // Inner circle
+    ctx.beginPath();
+    ctx.arc(CX, CY, R_IN, 0, Math.PI*2);
+    ctx.fillStyle = '#fff';
+    ctx.fill();
+    ctx.strokeStyle = '#e8eeff';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Center label
+    ctx.fillStyle = '#555';
+    ctx.font = 'bold 13px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('一天', CX, CY-8);
+    ctx.fillText('24時', CX, CY+8);
+
+    // 12-hour clock hand indicator
+    if (sel >= 0) {
+      const a = -Math.PI/2 + sel * Math.PI*2/24;
+      ctx.beginPath();
+      ctx.moveTo(CX + R_IN*Math.cos(a), CY + R_IN*Math.sin(a));
+      ctx.lineTo(CX + R_OUT*0.92*Math.cos(a), CY + R_OUT*0.92*Math.sin(a));
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([3,3]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+  }
+
+  function selectHour(h) {
+    selectedHour = h;
+    drawDial(h);
+    const info = getTimeLabel(h);
+    document.getElementById('timeInfo').innerHTML =
+      '<div class="time-main">' + info.period + ' <span style="color:' + ZONE_COLORS[h] + '">' + info.twelve + '</span> 時</div>' +
+      '<div class="time-24">' + info.note + '</div>' +
+      '<div class="time-note">點其他格子繼續探索</div>';
+  }
+
+  function handleClick(e) {
+    const rect = cvs.getBoundingClientRect();
+    const sx = cvs.width / rect.width;
+    const sy = cvs.height / rect.height;
+    const cx = (e.clientX - rect.left) * sx - CX;
+    const cy = (e.clientY - rect.top)  * sy - CY;
+    const dist = Math.sqrt(cx*cx + cy*cy);
+    if (dist < R_OUT && dist > R_IN * 0.7) {
+      let a = Math.atan2(cy, cx) + Math.PI/2;
+      if (a < 0) a += Math.PI*2;
+      selectHour(Math.floor(a / (Math.PI*2/24)) % 24);
+    }
+  }
+
+  cvs.addEventListener('click', handleClick);
+  cvs.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    const t = e.changedTouches[0];
+    handleClick({ clientX: t.clientX, clientY: t.clientY });
+  }, { passive: false });
+
+  drawDial(-1);
+
+  // ── Quiz ──────────────────────────────────────────────────
+  const QUIZ = [
+    { q: '下午 <span class="hl">3</span> 時 = <span class="hl">?</span> 時', ans: 15, hint: '下午 = 12 + 幾？' },
+    { q: '<span class="hl">17</span> 時 = 下午 <span class="hl">?</span> 時', ans: 5,  hint: '17 - 12 = ？' },
+    { q: '下午 <span class="hl">6</span> 時 = <span class="hl">?</span> 時', ans: 18, hint: '下午 = 12 + 幾？' },
+    { q: '<span class="hl">21</span> 時 = 晚上 <span class="hl">?</span> 時', ans: 9, hint: '21 - 12 = ？' },
+    { q: '下午 <span class="hl">9</span> 時 = <span class="hl">?</span> 時', ans: 21, hint: '下午 = 12 + 幾？' },
+    { q: '<span class="hl">14</span> 時 = 下午 <span class="hl">?</span> 時', ans: 2,  hint: '14 - 12 = ？' },
+    { q: '凌晨 <span class="hl">3</span> 時 = <span class="hl">?</span> 時', ans: 3,  hint: '凌晨 = 直接等於幾？' },
+    { q: '<span class="hl">20</span> 時 = 晚上 <span class="hl">?</span> 時', ans: 8, hint: '20 - 12 = ？' },
+  ];
+
+  let qIdx = 0, input = '', phase = 'answering';
+
+  function setMode(m) {
+    document.getElementById('explorePane').style.display = m === 'explore' ? '' : 'none';
+    document.getElementById('quizPane').style.display   = m === 'quiz'    ? '' : 'none';
+    document.getElementById('tabEx').className = 'tab' + (m === 'explore' ? ' on' : '');
+    document.getElementById('tabQz').className = 'tab' + (m === 'quiz'    ? ' on' : '');
+    if (m === 'quiz') loadQ();
+  }
+
+  function loadQ() {
+    const q = QUIZ[qIdx];
+    input = ''; phase = 'answering';
+    document.getElementById('quizQ').innerHTML = q.q;
+    document.getElementById('hintBox').textContent = '提示：' + q.hint;
+    document.getElementById('resultBox').className = 'result-box';
+    document.getElementById('nextBtn').className = 'next-btn';
+    document.getElementById('doneBanner').className = 'done-banner';
+    updateNp();
+    renderDots();
+  }
+
+  function renderDots() {
+    const el = document.getElementById('progDots');
+    el.innerHTML = '';
+    QUIZ.forEach((_, i) => {
+      const d = document.createElement('div');
+      d.className = 'dot' + (i < qIdx ? ' done' : i === qIdx ? ' cur' : '');
+      el.appendChild(d);
+    });
+  }
+
+  function npKey(d) {
+    if (phase !== 'answering' || input.length >= 2) return;
+    input += d; updateNp();
+  }
+  function npBack() {
+    if (phase !== 'answering') return;
+    input = input.slice(0,-1); updateNp();
+  }
+  function updateNp() {
+    document.getElementById('npDisp').textContent = input || '—';
+    document.getElementById('okBtn').disabled = input === '' || phase !== 'answering';
+  }
+
+  function npConfirm() {
+    if (phase !== 'answering' || !input) return;
+    const q = QUIZ[qIdx];
+    const rb = document.getElementById('resultBox');
+    if (parseInt(input) === q.ans) {
+      phase = 'correct';
+      rb.className = 'result-box ok';
+      document.getElementById('resultTitle').textContent = '✓ 答對了！';
+      document.getElementById('resultSub').textContent = '完整寫法：' + q.q.replace(/<[^>]+>/g,'').replace('?', q.ans);
+      const isLast = qIdx >= QUIZ.length - 1;
+      setTimeout(() => {
+        document.getElementById('nextBtn').className = isLast ? 'next-btn' : 'next-btn show';
+        if (isLast) setTimeout(() => { document.getElementById('doneBanner').className = 'done-banner show'; }, 300);
+      }, 300);
+    } else {
+      rb.className = 'result-box err';
+      document.getElementById('resultTitle').textContent = '× 再試一次';
+      document.getElementById('resultSub').textContent = '提示：' + q.hint;
+    }
+    input = ''; updateNp();
+  }
+
+  function nextQ() { qIdx++; if (qIdx < QUIZ.length) loadQ(); }
+  function restartQuiz() { qIdx = 0; loadQ(); }
+</script>
+</body>
+</html>
