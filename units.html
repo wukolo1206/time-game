@@ -185,14 +185,46 @@
   const CX = 140, CY = 140, R = 125;
 
   let totalSec = 0;      // 累計秒數（float），驅動所有指針
-  let isDragging = false, prevAngle = 0;
+  let isDragging = false, prevAngle = 0, dragHand = null;
 
-  function evAngle(e) {
+  // 每支指針一圈對應的秒數
+  const HAND_MULT = { sec: 60, min: 3600, hour: 43200 };
+
+  function evCoords(e) {
     const rect = cvs.getBoundingClientRect();
     const sx = cvs.width / rect.width, sy = cvs.height / rect.height;
     const src = e.touches ? e.touches[0] : e;
-    return Math.atan2((src.clientY - rect.top)  * sy - CY,
-                      (src.clientX - rect.left) * sx - CX);
+    return { x: (src.clientX - rect.left) * sx, y: (src.clientY - rect.top) * sy };
+  }
+  function evAngle(e) { const {x,y} = evCoords(e); return Math.atan2(y - CY, x - CX); }
+
+  function getHandAngles() {
+    const ws = ((totalSec % 43200) + 43200) % 43200;
+    return {
+      sec:  -Math.PI/2 + (ws % 60)   / 60    * Math.PI * 2,
+      min:  -Math.PI/2 + (ws % 3600)  / 3600  * Math.PI * 2,
+      hour: -Math.PI/2 + ws            / 43200 * Math.PI * 2,
+    };
+  }
+
+  function detectHand(x, y) {
+    const ag = getHandAngles();
+    const showH = document.getElementById('showHour').checked;
+    const showM = document.getElementById('showMin').checked;
+    const showS = document.getElementById('showSec').checked;
+    const d = (angle, len) => {
+      const tx = CX + len*Math.cos(angle), ty = CY + len*Math.sin(angle);
+      return Math.sqrt((x-tx)**2 + (y-ty)**2);
+    };
+    const HIT = 35; // 觸控判定半徑
+    if (showS && d(ag.sec,  R*0.85) < HIT) return 'sec';
+    if (showM && d(ag.min,  R*0.70) < HIT) return 'min';
+    if (showH && d(ag.hour, R*0.50) < HIT) return 'hour';
+    // 沒碰到指針就預設拖秒針
+    if (showS) return 'sec';
+    if (showM) return 'min';
+    if (showH) return 'hour';
+    return null;
   }
 
   function drawHand(angle, len, tail, width, color) {
@@ -271,34 +303,31 @@
     document.getElementById('clockRel').innerHTML = rel;
   }
 
-  // 拖曳旋轉（整個錶面皆可拖）
-  cvs.addEventListener('mousedown', e => {
-    isDragging = true; prevAngle = evAngle(e); e.preventDefault();
-  });
-  window.addEventListener('mousemove', e => {
-    if (!isDragging) return;
+  // 拖曳旋轉：偵測觸碰哪支指針，分別以對應倍率更新 totalSec
+  function startDrag(e) {
+    const {x, y} = evCoords(e);
+    dragHand = detectHand(x, y);
+    if (!dragHand) return;
+    isDragging = true; prevAngle = evAngle(e);
+  }
+  function doDrag(e) {
+    if (!isDragging || !dragHand) return;
     const a = evAngle(e);
     let da = a - prevAngle;
     if (da > Math.PI) da -= Math.PI*2;
     if (da < -Math.PI) da += Math.PI*2;
-    totalSec = Math.max(0, totalSec + da / (Math.PI*2) * 60);
+    totalSec = Math.max(0, totalSec + da / (Math.PI*2) * HAND_MULT[dragHand]);
     prevAngle = a; drawClock();
-  });
-  window.addEventListener('mouseup', () => isDragging = false);
+  }
+  function endDrag() { isDragging = false; dragHand = null; }
 
-  cvs.addEventListener('touchstart', e => {
-    e.preventDefault(); isDragging = true; prevAngle = evAngle(e);
-  }, { passive: false });
-  cvs.addEventListener('touchmove', e => {
-    e.preventDefault(); if (!isDragging) return;
-    const a = evAngle(e);
-    let da = a - prevAngle;
-    if (da > Math.PI) da -= Math.PI*2;
-    if (da < -Math.PI) da += Math.PI*2;
-    totalSec = Math.max(0, totalSec + da / (Math.PI*2) * 60);
-    prevAngle = a; drawClock();
-  }, { passive: false });
-  cvs.addEventListener('touchend', () => isDragging = false);
+  cvs.addEventListener('mousedown',  e => { e.preventDefault(); startDrag(e); });
+  window.addEventListener('mousemove', doDrag);
+  window.addEventListener('mouseup',   endDrag);
+
+  cvs.addEventListener('touchstart', e => { e.preventDefault(); startDrag(e); }, { passive: false });
+  cvs.addEventListener('touchmove',  e => { e.preventDefault(); doDrag(e);   }, { passive: false });
+  cvs.addEventListener('touchend',   endDrag);
 
   function resetClock() { totalSec = 0; drawClock(); }
   drawClock();
