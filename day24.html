@@ -138,6 +138,10 @@
   <div id="explorePane">
     <div class="dial-card">
       <canvas id="dial" width="280" height="280"></canvas>
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#555;cursor:pointer;align-self:flex-start">
+        <input type="checkbox" id="toggle24h" checked onchange="toggle24hRing()" style="width:16px;height:16px;cursor:pointer">
+        顯示外圈 24小時制對照
+      </label>
       <div class="time-info" id="timeInfo">
         <div class="time-prompt">點內圈選上午 AM，點外圈選下午 PM</div>
       </div>
@@ -223,6 +227,7 @@
   ];
 
   let selPos = -1, selType = null; // 'am' | 'pm'
+  let show24h = true;
 
   function getPeriod(h24) {
     if (h24 < 6)    return '凌晨';
@@ -236,30 +241,35 @@
     ctx.clearRect(0, 0, 280, 280);
 
     for (let p = 0; p < 12; p++) {
-      const a0 = -Math.PI/2 + p * Math.PI/6;
-      const a1 = a0 + Math.PI/6;
+      // 以時鐘刻度為扇形中心（12在正上、3在正右、6在正下、9在正左）
+      const midA = -Math.PI/2 + p * Math.PI/6;
+      const a0 = midA - Math.PI/12;
+      const a1 = midA + Math.PI/12;
+      const rEdge = show24h ? R_MID : R_OUT;
       const am = (selPos === p && selType === 'am');
       const pm = (selPos === p && selType === 'pm');
 
       // 內圈 AM 扇形
       ctx.beginPath();
       ctx.moveTo(CX, CY);
-      ctx.arc(CX, CY, R_MID, a0, a1);
+      ctx.arc(CX, CY, rEdge, a0, a1);
       ctx.closePath();
       ctx.fillStyle = AM_COL[p];
       ctx.globalAlpha = am ? 1 : 0.72;
       ctx.fill();
       ctx.globalAlpha = 1;
 
-      // 外圈 PM 環形
-      ctx.beginPath();
-      ctx.arc(CX, CY, R_OUT, a0, a1);
-      ctx.arc(CX, CY, R_MID, a1, a0, true);
-      ctx.closePath();
-      ctx.fillStyle = PM_COL[p];
-      ctx.globalAlpha = pm ? 1 : 0.72;
-      ctx.fill();
-      ctx.globalAlpha = 1;
+      // 外圈 PM 環形（可關閉）
+      if (show24h) {
+        ctx.beginPath();
+        ctx.arc(CX, CY, R_OUT, a0, a1);
+        ctx.arc(CX, CY, R_MID, a1, a0, true);
+        ctx.closePath();
+        ctx.fillStyle = PM_COL[p];
+        ctx.globalAlpha = pm ? 1 : 0.72;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
 
       // 分隔線
       ctx.beginPath();
@@ -272,12 +282,14 @@
 
     // 選取外框高亮
     if (selPos >= 0) {
-      const a0 = -Math.PI/2 + selPos * Math.PI/6;
-      const a1 = a0 + Math.PI/6;
+      const midA = -Math.PI/2 + selPos * Math.PI/6;
+      const a0 = midA - Math.PI/12;
+      const a1 = midA + Math.PI/12;
+      const rEdge = show24h ? R_MID : R_OUT;
       ctx.beginPath();
-      if (selType === 'am') {
+      if (!show24h || selType === 'am') {
         ctx.moveTo(CX, CY);
-        ctx.arc(CX, CY, R_MID, a0, a1);
+        ctx.arc(CX, CY, rEdge, a0, a1);
         ctx.closePath();
       } else {
         ctx.arc(CX, CY, R_OUT, a0, a1);
@@ -298,12 +310,13 @@
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    // 時針（指向扇形中間）
+    // 時針（指向精確時鐘刻度）
     if (selPos >= 0) {
-      const a = -Math.PI/2 + selPos * Math.PI/6 + Math.PI/12;
+      const a = -Math.PI/2 + selPos * Math.PI/6; // 精確刻度角
+      const handLen = show24h ? R_MID * 0.78 : R_OUT * 0.72;
       ctx.beginPath();
       ctx.moveTo(CX, CY);
-      ctx.lineTo(CX + R_MID * 0.78 * Math.cos(a), CY + R_MID * 0.78 * Math.sin(a));
+      ctx.lineTo(CX + handLen * Math.cos(a), CY + handLen * Math.sin(a));
       ctx.strokeStyle = '#333';
       ctx.lineWidth = 3;
       ctx.lineCap = 'round';
@@ -320,31 +333,34 @@
       ctx.fillText('時鐘', CX, CY - 7);
       ctx.font = '10px sans-serif';
       ctx.fillStyle = '#aaa';
-      ctx.fillText('24小時', CX, CY + 7);
+      ctx.fillText(show24h ? '24小時' : '12小時', CX, CY + 7);
     }
 
-    // 數字標籤
+    // 數字標籤（以刻度位置為準）
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     for (let p = 0; p < 12; p++) {
-      const midA = -Math.PI/2 + p * Math.PI/6 + Math.PI/12;
+      const midA = -Math.PI/2 + p * Math.PI/6; // 精確刻度角
       const amSel = selPos === p && selType === 'am';
       const pmSel = selPos === p && selType === 'pm';
+      const fLabelR = show24h ? R_MID * 0.65 : R_OUT * 0.68;
 
       // 內圈：12小時數字
-      const fx = CX + R_MID * 0.62 * Math.cos(midA);
-      const fy = CY + R_MID * 0.62 * Math.sin(midA);
+      const fx = CX + fLabelR * Math.cos(midA);
+      const fy = CY + fLabelR * Math.sin(midA);
       ctx.fillStyle = AM_TXT[p];
-      ctx.font = amSel ? 'bold 15px sans-serif' : '12px sans-serif';
+      ctx.font = amSel ? 'bold 15px sans-serif' : '13px sans-serif';
       ctx.fillText(CLOCK_LBL[p], fx, fy);
 
-      // 外圈：24小時數字
-      const pR = (R_MID + R_OUT) / 2;
-      const px = CX + pR * Math.cos(midA);
-      const py = CY + pR * Math.sin(midA);
-      ctx.fillStyle = PM_TXT[p];
-      ctx.font = pmSel ? 'bold 12px sans-serif' : '10px sans-serif';
-      ctx.fillText(PM_H24[p], px, py);
+      // 外圈：24小時數字（可關閉）
+      if (show24h) {
+        const pR = (R_MID + R_OUT) / 2;
+        const px = CX + pR * Math.cos(midA);
+        const py = CY + pR * Math.sin(midA);
+        ctx.fillStyle = PM_TXT[p];
+        ctx.font = pmSel ? 'bold 12px sans-serif' : '11px sans-serif';
+        ctx.fillText(PM_H24[p], px, py);
+      }
     }
   }
 
@@ -392,8 +408,19 @@
     if (dist > R_OUT || dist < R_CTR * 0.7) return;
     let a = Math.atan2(cy, cx) + Math.PI/2;
     if (a < 0) a += Math.PI*2;
-    const pos = Math.floor(a / (Math.PI/6)) % 12;
-    selectTime(pos, dist > R_MID ? 'pm' : 'am');
+    // 加 π/12 偏移使扇形偵測對齊以刻度為中心的扇形
+    const pos = Math.floor((a + Math.PI/12) / (Math.PI/6)) % 12;
+    selectTime(pos, (show24h && dist > R_MID) ? 'pm' : 'am');
+  }
+
+  function toggle24hRing() {
+    show24h = document.getElementById('toggle24h').checked;
+    if (!show24h && selType === 'pm') {
+      selPos = -1; selType = null;
+      document.getElementById('timeInfo').innerHTML =
+        '<div class="time-prompt">點時鐘選取時間</div>';
+    }
+    drawClock();
   }
 
   cvs.addEventListener('click', handleClick);
