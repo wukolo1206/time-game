@@ -291,16 +291,23 @@
     const s = Math.round(ws % 60) % 60;
     document.getElementById('clockTime').textContent = h + ' 時  ' + m + ' 分  ' + s + ' 秒';
 
-    // 關係說明
+    // 關係說明（只顯示有勾選的指針）
     const tot  = Math.round(Math.max(0, totalSec));
     const secR = Math.floor(tot / 60);
     const minR = Math.floor(tot / 3600);
-    let rel = '秒針走了 <strong>' + tot + '</strong> 秒';
-    if (secR > 0) rel += '（<strong>' + secR + ' 圈</strong>）→ 分針走了 <strong>' + secR + ' 格</strong>';
-    rel += '<br>';
-    if (minR > 0) rel += '分針走了 <strong>' + minR + ' 圈</strong> → 時針走了 <strong>' + minR + ' 大格</strong>';
-    else          rel += '分針走滿一圈，時針才走一大格';
-    document.getElementById('clockRel').innerHTML = rel;
+    const lines = [];
+    if (showS) {
+      let l = '秒針走了 <strong>' + tot + '</strong> 秒';
+      if (secR > 0 && showM) l += '（<strong>' + secR + ' 圈</strong>）→ 分針走了 <strong>' + secR + ' 格</strong>';
+      else if (secR > 0)     l += '（走了 <strong>' + secR + ' 圈</strong>）';
+      lines.push(l);
+    }
+    if (showM && showH) {
+      lines.push(minR > 0
+        ? '分針走了 <strong>' + minR + ' 圈</strong> → 時針走了 <strong>' + minR + ' 大格</strong>'
+        : '分針走滿一圈，時針才走一大格');
+    }
+    document.getElementById('clockRel').innerHTML = lines.join('<br>') || '拖曳指針旋轉';
   }
 
   // 拖曳旋轉：偵測觸碰哪支指針，分別以對應倍率更新 totalSec
