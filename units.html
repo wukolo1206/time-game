@@ -40,11 +40,24 @@
     canvas { display: block; }
     .rel-note { font-size: 12px; color: #aaa; text-align: center; line-height: 1.5; }
 
-    /* Play button */
-    .play-btn { border: none; border-radius: 20px; background: #e17055; color: #fff;
-                font-size: 14px; font-weight: bold; padding: 7px 18px; cursor: pointer;
-                -webkit-tap-highlight-color: transparent; }
-    .play-btn:active { opacity: .8; }
+    /* Interactive clock */
+    .clock-card { background: #fff; border-radius: 20px; padding: 20px 16px;
+                  box-shadow: 0 2px 14px rgba(225,112,85,.14);
+                  display: flex; flex-direction: column; align-items: center; gap: 14px; }
+    #clockCvs { touch-action: none; cursor: grab; display: block; }
+    #clockCvs:active { cursor: grabbing; }
+    .hand-toggles { display: flex; gap: 20px; }
+    .hand-toggle { display: flex; align-items: center; gap: 6px; font-size: 15px;
+                   font-weight: bold; cursor: pointer; user-select: none; }
+    .hand-toggle input { width: 17px; height: 17px; cursor: pointer; }
+    .clock-time { font-size: 24px; font-weight: bold; color: #333; text-align: center;
+                  letter-spacing: 2px; }
+    .clock-rel  { font-size: 13px; color: #888; text-align: center; line-height: 2; }
+    .clock-rel strong { color: #e17055; }
+    .clock-reset { border: 1.5px solid #dde3ff; border-radius: 10px; background: #f8f9ff;
+                   color: #888; font-size: 13px; font-weight: bold; padding: 6px 16px;
+                   cursor: pointer; -webkit-tap-highlight-color: transparent; }
+    .clock-reset:active { opacity: .75; }
 
     /* Practice section */
     .section-title { font-size: 13px; font-weight: bold; color: #aaa; letter-spacing: 1px; padding-left: 4px; }
@@ -111,22 +124,23 @@
 
 <div class="wrap">
 
-  <!-- Visual relationship cards -->
-  <div class="rel-cards">
-    <!-- 1小時 = 60分 -->
-    <div class="rel-card">
-      <div class="rel-title">1小時 ＝ <span>60</span>分鐘</div>
-      <canvas id="c60m" width="140" height="140"></canvas>
-      <button class="play-btn" onclick="animate60(c60mCtx, '#e17055')">▶ 播放</button>
-      <div class="rel-note">分針繞一圈<br>＝ 60分鐘 ＝ 1小時</div>
+  <!-- Interactive clock -->
+  <div class="clock-card">
+    <canvas id="clockCvs" width="280" height="280"></canvas>
+    <div class="hand-toggles">
+      <label class="hand-toggle" style="color:#333">
+        <input type="checkbox" id="showHour" checked onchange="drawClock()"> 時針
+      </label>
+      <label class="hand-toggle" style="color:#0984e3">
+        <input type="checkbox" id="showMin" checked onchange="drawClock()"> 分針
+      </label>
+      <label class="hand-toggle" style="color:#e17055">
+        <input type="checkbox" id="showSec" checked onchange="drawClock()"> 秒針
+      </label>
     </div>
-    <!-- 1分鐘 = 60秒 -->
-    <div class="rel-card">
-      <div class="rel-title">1分鐘 ＝ <span>60</span>秒</div>
-      <canvas id="c60s" width="140" height="140"></canvas>
-      <button class="play-btn" onclick="animate60(c60sCtx, '#0984e3')">▶ 播放</button>
-      <div class="rel-note">秒針繞一圈<br>＝ 60秒 ＝ 1分鐘</div>
-    </div>
+    <div class="clock-time" id="clockTime">0 時  0 分  0 秒</div>
+    <div class="clock-rel" id="clockRel">拖曳時鐘旋轉，看看指針怎麼走</div>
+    <button class="clock-reset" onclick="resetClock()">↺ 重設</button>
   </div>
 
   <!-- Practice -->
@@ -165,67 +179,129 @@
 </div>
 
 <script>
-  // ── 60-dot ring animation ─────────────────────────────────
-  const c60mEl  = document.getElementById('c60m');
-  const c60sEl  = document.getElementById('c60s');
-  const c60mCtx = c60mEl.getContext('2d');
-  const c60sCtx = c60sEl.getContext('2d');
+  // ── Interactive clock ─────────────────────────────────────
+  const cvs = document.getElementById('clockCvs');
+  const ctx  = cvs.getContext('2d');
+  const CX = 140, CY = 140, R = 125;
 
-  function draw60Ring(ctx, filled, color, total) {
-    const W = 140, cx = 70, cy = 70, R = 58;
-    ctx.clearRect(0, 0, W, W);
+  let totalSec = 0;      // 累計秒數（float），驅動所有指針
+  let isDragging = false, prevAngle = 0;
 
-    for (let i = 0; i < total; i++) {
-      const a = -Math.PI/2 + i * Math.PI*2/total;
-      const x = cx + R * Math.cos(a);
-      const y = cy + R * Math.sin(a);
+  function evAngle(e) {
+    const rect = cvs.getBoundingClientRect();
+    const sx = cvs.width / rect.width, sy = cvs.height / rect.height;
+    const src = e.touches ? e.touches[0] : e;
+    return Math.atan2((src.clientY - rect.top)  * sy - CY,
+                      (src.clientX - rect.left) * sx - CX);
+  }
+
+  function drawHand(angle, len, tail, width, color) {
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(CX - tail * Math.cos(angle), CY - tail * Math.sin(angle));
+    ctx.lineTo(CX + len  * Math.cos(angle), CY + len  * Math.sin(angle));
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width;
+    ctx.stroke();
+  }
+
+  function drawClock() {
+    ctx.clearRect(0, 0, 280, 280);
+
+    // 錶面
+    ctx.beginPath(); ctx.arc(CX, CY, R, 0, Math.PI*2);
+    ctx.fillStyle = '#fff'; ctx.fill();
+    ctx.strokeStyle = '#dde3ff'; ctx.lineWidth = 3; ctx.stroke();
+
+    // 刻度
+    for (let i = 0; i < 60; i++) {
+      const a = -Math.PI/2 + i * Math.PI/30;
+      const maj = i % 5 === 0;
       ctx.beginPath();
-      ctx.arc(x, y, 4, 0, Math.PI*2);
-      ctx.fillStyle = i < filled ? color : '#e8eeff';
-      ctx.fill();
+      ctx.moveTo(CX + (R - (maj ? 15 : 8)) * Math.cos(a), CY + (R - (maj ? 15 : 8)) * Math.sin(a));
+      ctx.lineTo(CX + (R - 2) * Math.cos(a),               CY + (R - 2) * Math.sin(a));
+      ctx.strokeStyle = maj ? '#666' : '#ccc'; ctx.lineWidth = maj ? 2.5 : 1; ctx.stroke();
     }
 
-    // Count label
-    ctx.fillStyle = color;
-    ctx.font = 'bold 26px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(filled, cx, cy - 8);
-    ctx.fillStyle = '#aaa';
-    ctx.font = '12px sans-serif';
-    ctx.fillText(filled === total ? '完成！' : '/ ' + total, cx, cy + 12);
-  }
-
-  let animId60m = null, animId60s = null;
-
-  function animate60(ctx, color) {
-    if (animId60m && ctx === c60mCtx) { cancelAnimationFrame(animId60m); }
-    if (animId60s && ctx === c60sCtx) { cancelAnimationFrame(animId60s); }
-
-    let count = 0;
-    const total = 60;
-    const delay = 30; // ms per dot
-    let lastTime = 0;
-
-    function tick(ts) {
-      if (ts - lastTime >= delay) {
-        lastTime = ts;
-        count++;
-        draw60Ring(ctx, count, color, total);
-        if (count >= total) return;
-      }
-      const id = requestAnimationFrame(tick);
-      if (ctx === c60mCtx) animId60m = id;
-      else animId60s = id;
+    // 數字 1–12
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#333'; ctx.font = 'bold 16px sans-serif';
+    for (let h = 1; h <= 12; h++) {
+      const a = -Math.PI/2 + h * Math.PI/6;
+      ctx.fillText(h, CX + (R - 27) * Math.cos(a), CY + (R - 27) * Math.sin(a));
     }
 
-    draw60Ring(ctx, 0, color, total);
-    requestAnimationFrame(tick);
+    // 計算指針角度（wrapping at 12h = 43200s）
+    const ws = ((totalSec % 43200) + 43200) % 43200;
+    const secA  = -Math.PI/2 + (ws % 60)   / 60    * Math.PI * 2;
+    const minA  = -Math.PI/2 + (ws % 3600)  / 3600  * Math.PI * 2;
+    const hourA = -Math.PI/2 + ws            / 43200 * Math.PI * 2;
+
+    const showH = document.getElementById('showHour').checked;
+    const showM = document.getElementById('showMin').checked;
+    const showS = document.getElementById('showSec').checked;
+
+    if (showH) drawHand(hourA, R * 0.50, 12, 6,   '#333');
+    if (showM) drawHand(minA,  R * 0.70, 10, 4,   '#0984e3');
+    if (showS) drawHand(secA,  R * 0.85, 16, 1.5, '#e17055');
+
+    // 中心軸
+    ctx.beginPath(); ctx.arc(CX, CY, 6, 0, Math.PI*2);
+    ctx.fillStyle = '#555'; ctx.fill();
+    if (showS) {
+      ctx.beginPath(); ctx.arc(CX, CY, 3, 0, Math.PI*2);
+      ctx.fillStyle = '#e17055'; ctx.fill();
+    }
+
+    // 數字顯示
+    const h = Math.floor(ws / 3600);
+    const m = Math.floor((ws % 3600) / 60);
+    const s = Math.round(ws % 60) % 60;
+    document.getElementById('clockTime').textContent = h + ' 時  ' + m + ' 分  ' + s + ' 秒';
+
+    // 關係說明
+    const tot  = Math.round(Math.max(0, totalSec));
+    const secR = Math.floor(tot / 60);
+    const minR = Math.floor(tot / 3600);
+    let rel = '秒針走了 <strong>' + tot + '</strong> 秒';
+    if (secR > 0) rel += '（<strong>' + secR + ' 圈</strong>）→ 分針走了 <strong>' + secR + ' 格</strong>';
+    rel += '<br>';
+    if (minR > 0) rel += '分針走了 <strong>' + minR + ' 圈</strong> → 時針走了 <strong>' + minR + ' 大格</strong>';
+    else          rel += '分針走滿一圈，時針才走一大格';
+    document.getElementById('clockRel').innerHTML = rel;
   }
 
-  // Initial draw
-  draw60Ring(c60mCtx, 60, '#e17055', 60);
-  draw60Ring(c60sCtx, 60, '#0984e3', 60);
+  // 拖曳旋轉（整個錶面皆可拖）
+  cvs.addEventListener('mousedown', e => {
+    isDragging = true; prevAngle = evAngle(e); e.preventDefault();
+  });
+  window.addEventListener('mousemove', e => {
+    if (!isDragging) return;
+    const a = evAngle(e);
+    let da = a - prevAngle;
+    if (da > Math.PI) da -= Math.PI*2;
+    if (da < -Math.PI) da += Math.PI*2;
+    totalSec = Math.max(0, totalSec + da / (Math.PI*2) * 60);
+    prevAngle = a; drawClock();
+  });
+  window.addEventListener('mouseup', () => isDragging = false);
+
+  cvs.addEventListener('touchstart', e => {
+    e.preventDefault(); isDragging = true; prevAngle = evAngle(e);
+  }, { passive: false });
+  cvs.addEventListener('touchmove', e => {
+    e.preventDefault(); if (!isDragging) return;
+    const a = evAngle(e);
+    let da = a - prevAngle;
+    if (da > Math.PI) da -= Math.PI*2;
+    if (da < -Math.PI) da += Math.PI*2;
+    totalSec = Math.max(0, totalSec + da / (Math.PI*2) * 60);
+    prevAngle = a; drawClock();
+  }, { passive: false });
+  cvs.addEventListener('touchend', () => isDragging = false);
+
+  function resetClock() { totalSec = 0; drawClock(); }
+  drawClock();
 
   // ── Practice quiz ─────────────────────────────────────────
   const PROBS = [
