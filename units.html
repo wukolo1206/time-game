@@ -289,7 +289,11 @@
     const h = Math.floor(ws / 3600);
     const m = Math.floor((ws % 3600) / 60);
     const s = Math.round(ws % 60) % 60;
-    document.getElementById('clockTime').textContent = h + ' 時  ' + m + ' 分  ' + s + ' 秒';
+    const parts = [];
+    if (showH) parts.push(h + ' 時');
+    if (showM) parts.push(m + ' 分');
+    if (showS) parts.push(s + ' 秒');
+    document.getElementById('clockTime').textContent = parts.join('  ');
 
     // 關係說明（只顯示有勾選的指針）
     const tot  = Math.round(Math.max(0, totalSec));
