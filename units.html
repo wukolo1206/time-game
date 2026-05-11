@@ -169,6 +169,10 @@
         <!-- 設定時間 -->
         <div class="ctrl-label">設定時間</div>
         <div class="sel-row">
+          <select id="setAmPm" style="width:60px">
+            <option value="am">上午</option>
+            <option value="pm">下午</option>
+          </select>
           <select id="setH"></select><span>時</span>
           <select id="setM"></select><span>分</span>
           <select id="setS"></select><span>秒</span>
@@ -239,15 +243,15 @@
   const CX = 130, CY = 130, R = 116;
 
   // 填充下拉選單
-  function buildSelect(id, max) {
+  function buildSelect(id, from, to) {
     const sel = document.getElementById(id);
-    for (let i = 0; i <= max; i++) {
+    for (let i = from; i <= to; i++) {
       const o = document.createElement('option');
       o.value = i; o.textContent = (i < 10 ? '0' : '') + i; sel.appendChild(o);
     }
   }
-  buildSelect('setH', 12); buildSelect('setM', 59); buildSelect('setS', 59);
-  buildSelect('elH', 12);  buildSelect('elM', 59);  buildSelect('elS', 59);
+  buildSelect('setH', 1, 12); buildSelect('setM', 0, 59); buildSelect('setS', 0, 59);
+  buildSelect('elH', 0, 12);  buildSelect('elM', 0, 59);  buildSelect('elS', 0, 59);
 
   let totalSec = 0;      // 累計秒數（float），驅動所有指針
   let isDragging = false, prevAngle = 0, dragHand = null;
@@ -350,15 +354,20 @@
       ctx.fillStyle = '#e17055'; ctx.fill();
     }
 
-    // 數字顯示
-    const h = Math.floor(ws / 3600);
-    const m = Math.floor((ws % 3600) / 60);
-    const s = Math.round(ws % 60) % 60;
-    const parts = [];
-    if (showH) parts.push(h + ' 時');
-    if (showM) parts.push(m + ' 分');
-    if (showS) parts.push(s + ' 秒');
-    document.getElementById('clockTime').textContent = parts.join('  ');
+    // 數字顯示（同時顯示 12h 和 24h）
+    const ds  = ((totalSec % 86400) + 86400) % 86400;
+    const h24 = Math.floor(ds / 3600);
+    const h12 = h24 % 12 || 12;
+    const period = h24 < 6 ? '凌晨' : h24 < 12 ? '上午' : h24 === 12 ? '中午' : h24 < 19 ? '下午' : '晚上';
+    const m = Math.floor((ds % 3600) / 60);
+    const s = Math.round(ds % 60) % 60;
+    const p12 = [], p24 = [];
+    if (showH) { p12.push(period + ' ' + h12 + ' 時'); p24.push(h24 + ' 時'); }
+    if (showM) { p12.push(m + ' 分'); p24.push(m + ' 分'); }
+    if (showS) { p12.push(s + ' 秒'); p24.push(s + ' 秒'); }
+    let tHTML = '<span style="font-size:20px;font-weight:bold;color:#333">' + (p12.join('  ') || '—') + '</span>';
+    if (showH) tHTML += '<br><span style="font-size:12px;color:#aaa">= ' + p24.join('  ') + '（24小時制）</span>';
+    document.getElementById('clockTime').innerHTML = tHTML;
 
     // 關係說明（只顯示有勾選的指針）
     const tot  = Math.round(Math.max(0, totalSec));
@@ -442,10 +451,12 @@
   }
 
   function applySetTime() {
-    const h = parseInt(document.getElementById('setH').value) || 0;
-    const m = parseInt(document.getElementById('setM').value) || 0;
-    const s = parseInt(document.getElementById('setS').value) || 0;
-    totalSec = h * 3600 + m * 60 + s;
+    const h12  = parseInt(document.getElementById('setH').value) || 1;
+    const m    = parseInt(document.getElementById('setM').value) || 0;
+    const s    = parseInt(document.getElementById('setS').value) || 0;
+    const ampm = document.getElementById('setAmPm').value;
+    const h24  = ampm === 'am' ? (h12 === 12 ? 0 : h12) : (h12 === 12 ? 12 : h12 + 12);
+    totalSec = h24 * 3600 + m * 60 + s;
     drawClock();
   }
   function resetClock() { totalSec = 0; drawClock(); }
