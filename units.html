@@ -309,10 +309,22 @@
   function drawClock() {
     ctx.clearRect(0, 0, 280, 280);
 
+    // 先算 24h 時間，決定主題色
+    const ds  = ((totalSec % 86400) + 86400) % 86400;
+    const h24 = Math.floor(ds / 3600);
+    const isPM = h24 >= 13 && h24 <= 18;
+    const theme = isPM ? {
+      face: '#fff8ee', border: '#f59f00',
+      tickMaj: '#e67700', tickMin: '#ffd8a8', num: '#c76b10'
+    } : {
+      face: '#fff', border: '#dde3ff',
+      tickMaj: '#666', tickMin: '#ccc', num: '#333'
+    };
+
     // 錶面
     ctx.beginPath(); ctx.arc(CX, CY, R, 0, Math.PI*2);
-    ctx.fillStyle = '#fff'; ctx.fill();
-    ctx.strokeStyle = '#dde3ff'; ctx.lineWidth = 3; ctx.stroke();
+    ctx.fillStyle = theme.face; ctx.fill();
+    ctx.strokeStyle = theme.border; ctx.lineWidth = 3; ctx.stroke();
 
     // 刻度
     for (let i = 0; i < 60; i++) {
@@ -321,12 +333,12 @@
       ctx.beginPath();
       ctx.moveTo(CX + (R - (maj ? 15 : 8)) * Math.cos(a), CY + (R - (maj ? 15 : 8)) * Math.sin(a));
       ctx.lineTo(CX + (R - 2) * Math.cos(a),               CY + (R - 2) * Math.sin(a));
-      ctx.strokeStyle = maj ? '#666' : '#ccc'; ctx.lineWidth = maj ? 2.5 : 1; ctx.stroke();
+      ctx.strokeStyle = maj ? theme.tickMaj : theme.tickMin; ctx.lineWidth = maj ? 2.5 : 1; ctx.stroke();
     }
 
     // 數字 1–12
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillStyle = '#333'; ctx.font = 'bold 16px sans-serif';
+    ctx.fillStyle = theme.num; ctx.font = 'bold 16px sans-serif';
     for (let h = 1; h <= 12; h++) {
       const a = -Math.PI/2 + h * Math.PI/6;
       ctx.fillText(h, CX + (R - 27) * Math.cos(a), CY + (R - 27) * Math.sin(a));
@@ -342,21 +354,17 @@
     const showM = document.getElementById('showMin').checked;
     const showS = document.getElementById('showSec').checked;
 
-    if (showH) drawHand(hourA, R * 0.50, 12, 6,   '#333');
+    if (showH) drawHand(hourA, R * 0.50, 12, 6,   isPM ? '#c76b10' : '#333');
     if (showM) drawHand(minA,  R * 0.70, 10, 4,   '#0984e3');
     if (showS) drawHand(secA,  R * 0.85, 16, 1.5, '#e17055');
 
     // 中心軸
     ctx.beginPath(); ctx.arc(CX, CY, 6, 0, Math.PI*2);
-    ctx.fillStyle = '#555'; ctx.fill();
+    ctx.fillStyle = isPM ? '#e67700' : '#555'; ctx.fill();
     if (showS) {
       ctx.beginPath(); ctx.arc(CX, CY, 3, 0, Math.PI*2);
       ctx.fillStyle = '#e17055'; ctx.fill();
     }
-
-    // 數字顯示（同時顯示 12h 和 24h）
-    const ds  = ((totalSec % 86400) + 86400) % 86400;
-    const h24 = Math.floor(ds / 3600);
     const h12 = h24 % 12 || 12;
     const period = h24 < 6 ? '凌晨' : h24 < 12 ? '上午' : h24 === 12 ? '中午' : h24 < 19 ? '下午' : '晚上';
     const m = Math.floor((ds % 3600) / 60);
