@@ -168,7 +168,6 @@
     <div class="quiz-card">
       <div class="prog-dots" id="progDots"></div>
       <div class="quiz-q" id="quizQ"></div>
-      <div class="hint-box" id="hintBox"></div>
       <!-- 上午/下午 選擇（只在 to12 題型出現） -->
       <div class="period-wrap" id="periodWrap" style="display:none">
         <button class="period-btn" id="btnAM" onclick="selectPeriod('上午')">上午</button>
@@ -483,7 +482,6 @@
       document.getElementById('quizQ').innerHTML =
         q.period + ' <span class="hl">' + q.h12 + '</span> 時 = <span class="hl">?</span> 時';
     }
-    document.getElementById('hintBox').textContent = '提示：' + q.hint;
     document.getElementById('resultBox').className = 'result-box';
     document.getElementById('nextBtn').className = 'next-btn';
     document.getElementById('doneBanner').className = 'done-banner';
@@ -555,7 +553,7 @@
     } else {
       rb.className = 'result-box err';
       document.getElementById('resultTitle').textContent = '× 再試一次';
-      document.getElementById('resultSub').textContent = '提示：' + q.hint;
+      document.getElementById('resultSub').textContent = '';
     }
     input = ''; updateNp();
   }
