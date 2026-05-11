@@ -113,6 +113,13 @@
       25%     { transform: translateX(-8px); }
       75%     { transform: translateX(8px); }
     }
+
+    .period-wrap { display:flex; gap:10px; width:100%; justify-content:center; }
+    .period-btn  { flex:1; border:2px solid #dde3ff; background:#fff; border-radius:14px;
+                   font-size:20px; font-weight:bold; color:#888; padding:12px;
+                   cursor:pointer; max-width:140px;
+                   -webkit-tap-highlight-color:transparent; }
+    .period-btn.on { background:#0984e3; border-color:#0984e3; color:#fff; }
   </style>
 </head>
 <body>
@@ -162,6 +169,11 @@
       <div class="prog-dots" id="progDots"></div>
       <div class="quiz-q" id="quizQ"></div>
       <div class="hint-box" id="hintBox"></div>
+      <!-- 上午/下午 選擇（只在 to12 題型出現） -->
+      <div class="period-wrap" id="periodWrap" style="display:none">
+        <button class="period-btn" id="btnAM" onclick="selectPeriod('上午')">上午</button>
+        <button class="period-btn" id="btnPM" onclick="selectPeriod('下午')">下午</button>
+      </div>
       <div class="np-wrap">
         <div class="np-display" id="npDisp">—</div>
         <div class="np-grid">
@@ -433,18 +445,20 @@
   drawClock();
 
   // ── Quiz ──────────────────────────────────────────────────
+  // type:'to24'  下午/上午 X 時 → 24h（學生輸入數字）
+  // type:'to12'  Y 時 → 上午/下午 X 時（學生選上午/下午 + 輸入數字）
   const QUIZ = [
-    { q: '下午 <span class="hl">3</span> 時 = <span class="hl">?</span> 時', ans: 15, hint: '下午 = 12 + 幾？' },
-    { q: '<span class="hl">17</span> 時 = 下午 <span class="hl">?</span> 時', ans: 5,  hint: '17 - 12 = ？' },
-    { q: '下午 <span class="hl">6</span> 時 = <span class="hl">?</span> 時', ans: 18, hint: '下午 = 12 + 幾？' },
-    { q: '<span class="hl">21</span> 時 = 晚上 <span class="hl">?</span> 時', ans: 9, hint: '21 - 12 = ？' },
-    { q: '下午 <span class="hl">9</span> 時 = <span class="hl">?</span> 時', ans: 21, hint: '下午 = 12 + 幾？' },
-    { q: '<span class="hl">14</span> 時 = 下午 <span class="hl">?</span> 時', ans: 2,  hint: '14 - 12 = ？' },
-    { q: '凌晨 <span class="hl">3</span> 時 = <span class="hl">?</span> 時', ans: 3,  hint: '凌晨 = 直接等於幾？' },
-    { q: '<span class="hl">20</span> 時 = 晚上 <span class="hl">?</span> 時', ans: 8, hint: '20 - 12 = ？' },
+    { type:'to24', period:'下午', h12:3,  ans:15, hint:'下午 3 時：3 + 12 = ？' },
+    { type:'to12', h24:17, ansPer:'下午', ans:5,  hint:'17 − 12 = ？，是上午還是下午？' },
+    { type:'to24', period:'下午', h12:6,  ans:18, hint:'下午 6 時：6 + 12 = ？' },
+    { type:'to12', h24:21, ansPer:'下午', ans:9,  hint:'21 − 12 = ？，是上午還是下午？' },
+    { type:'to24', period:'上午', h12:8,  ans:8,  hint:'上午 8 時，24小時制也是 ？ 時' },
+    { type:'to12', h24:14, ansPer:'下午', ans:2,  hint:'14 − 12 = ？，是上午還是下午？' },
+    { type:'to24', period:'上午', h12:11, ans:11, hint:'上午 11 時，24小時制也是 ？ 時' },
+    { type:'to12', h24:20, ansPer:'下午', ans:8,  hint:'20 − 12 = ？，是上午還是下午？' },
   ];
 
-  let qIdx = 0, input = '', phase = 'answering';
+  let qIdx = 0, input = '', phase = 'answering', selectedPeriod = null;
 
   function setMode(m) {
     document.getElementById('explorePane').style.display = m === 'explore' ? '' : 'none';
@@ -456,14 +470,33 @@
 
   function loadQ() {
     const q = QUIZ[qIdx];
-    input = ''; phase = 'answering';
-    document.getElementById('quizQ').innerHTML = q.q;
+    input = ''; selectedPeriod = null; phase = 'answering';
+    const pw = document.getElementById('periodWrap');
+    if (q.type === 'to12') {
+      pw.style.display = '';
+      document.getElementById('btnAM').className = 'period-btn';
+      document.getElementById('btnPM').className = 'period-btn';
+      document.getElementById('quizQ').innerHTML =
+        '<span class="hl">' + q.h24 + '</span> 時 = ？ 時';
+    } else {
+      pw.style.display = 'none';
+      document.getElementById('quizQ').innerHTML =
+        q.period + ' <span class="hl">' + q.h12 + '</span> 時 = <span class="hl">?</span> 時';
+    }
     document.getElementById('hintBox').textContent = '提示：' + q.hint;
     document.getElementById('resultBox').className = 'result-box';
     document.getElementById('nextBtn').className = 'next-btn';
     document.getElementById('doneBanner').className = 'done-banner';
     updateNp();
     renderDots();
+  }
+
+  function selectPeriod(p) {
+    if (phase !== 'answering') return;
+    selectedPeriod = p;
+    document.getElementById('btnAM').className = 'period-btn' + (p === '上午' ? ' on' : '');
+    document.getElementById('btnPM').className = 'period-btn' + (p === '下午' ? ' on' : '');
+    updateNp();
   }
 
   function renderDots() {
@@ -486,18 +519,34 @@
   }
   function updateNp() {
     document.getElementById('npDisp').textContent = input || '—';
-    document.getElementById('okBtn').disabled = input === '' || phase !== 'answering';
+    const q = QUIZ[qIdx];
+    const periodOk = q.type === 'to24' || selectedPeriod !== null;
+    document.getElementById('okBtn').disabled = input === '' || phase !== 'answering' || !periodOk;
   }
 
   function npConfirm() {
     if (phase !== 'answering' || !input) return;
     const q = QUIZ[qIdx];
     const rb = document.getElementById('resultBox');
-    if (parseInt(input) === q.ans) {
+    let correct = false, fullAns = '';
+    if (q.type === 'to24') {
+      correct = parseInt(input) === q.ans;
+      fullAns = q.period + ' ' + q.h12 + ' 時 = ' + q.ans + ' 時';
+    } else {
+      if (!selectedPeriod) {
+        rb.className = 'result-box err';
+        document.getElementById('resultTitle').textContent = '× 請先選上午或下午';
+        document.getElementById('resultSub').textContent = '';
+        input = ''; updateNp(); return;
+      }
+      correct = (selectedPeriod === q.ansPer) && (parseInt(input) === q.ans);
+      fullAns = q.h24 + ' 時 = ' + q.ansPer + ' ' + q.ans + ' 時';
+    }
+    if (correct) {
       phase = 'correct';
       rb.className = 'result-box ok';
       document.getElementById('resultTitle').textContent = '✓ 答對了！';
-      document.getElementById('resultSub').textContent = '完整寫法：' + q.q.replace(/<[^>]+>/g,'').replace('?', q.ans);
+      document.getElementById('resultSub').textContent = '完整寫法：' + fullAns;
       const isLast = qIdx >= QUIZ.length - 1;
       setTimeout(() => {
         document.getElementById('nextBtn').className = isLast ? 'next-btn' : 'next-btn show';
