@@ -50,16 +50,7 @@
     .prob-text { font-size: 16px; line-height: 1.9; color: #333;
                  padding-bottom: 14px; border-bottom: 1px dashed #e0e0e0; }
 
-    /* Steps (2 only) */
-    .steps { display: flex; gap: 8px; justify-content: center; align-items: center; }
-    .step { width: 30px; height: 30px; border-radius: 50%; border: 2px solid #dde;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 12px; font-weight: bold; color: #bbb; transition: all .3s; }
-    .step.done   { background: #20c997; border-color: #20c997; color: #fff; }
-    .step.active { background: #e6fcf5; border-color: #20c997; color: #20c997; }
-    .step-sep { color: #ddd; font-size: 18px; }
-
-    /* ── Phase 1: Timeline ── */
+    /* ── Timeline ── */
     .tl-prompt { font-size: 14px; font-weight: bold; color: #555; text-align: center; }
 
     .timeline { display: flex; align-items: stretch; justify-content: center;
@@ -175,17 +166,10 @@
   </div>
 
   <div class="main-card" id="mainCard">
-    <!-- Step indicator -->
-    <div class="steps">
-      <div class="step active" id="s1">1</div>
-      <div class="step-sep">›</div>
-      <div class="step" id="s2">2</div>
-    </div>
-
     <div class="prob-text" id="probText"></div>
 
-    <!-- Phase 1: Timeline placement -->
-    <div class="phase-sec" id="phase1">
+    <!-- Timeline placement -->
+    <div class="phase-sec">
       <div class="tl-prompt">把數值放到正確的格子裡</div>
       <div class="timeline">
         <div class="tl-col">
@@ -206,8 +190,8 @@
       <div class="card-pool" id="cardPool"></div>
     </div>
 
-    <!-- Phase 2: Equation selection + reveal -->
-    <div class="phase-sec" id="phase2" style="display:none">
+    <!-- Equation section: hidden until timeline complete -->
+    <div class="phase-sec" id="eqSection" style="display:none">
       <div class="eq-prompt">選出正確的算式結構</div>
       <div class="eq-options" id="eqOptions"></div>
       <div class="eq-reveal" id="eqReveal">
@@ -343,7 +327,6 @@ const NUM_GROUPS = Math.ceil(PROBLEMS.length / GROUP_SIZE);
 let curGroup   = 0;
 let groupProbs = [];
 let curIdx     = 0;
-let phase      = 1;
 
 let selectedCard = null;
 let placedCards  = {};  // {start|elapsed|end: val|null}
@@ -386,28 +369,20 @@ function initGroup() {
 // ── Load problem ─────────────────────────────────────────────
 function loadProblem() {
   const p = PROBLEMS[groupProbs[curIdx]];
-  phase = 1; selectedCard = null; placedCards = {};
+  selectedCard = null; placedCards = {};
 
   updateProgress(curIdx);
 
   document.getElementById('probText').textContent = p.text;
 
-  setSteps(1);
-  showPhase(1);
+  resetEqSection();
+  renderTimeline();
 }
 
-function setSteps(n) {
-  document.getElementById('s1').className = 'step' + (n > 1 ? ' done' : n === 1 ? ' active' : '');
-  document.getElementById('s2').className = 'step' + (n > 2 ? ' done' : n === 2 ? ' active' : '');
-}
-
-function showPhase(n) {
-  phase = n;
-  setSteps(n);
-  document.getElementById('phase1').style.display = n === 1 ? '' : 'none';
-  document.getElementById('phase2').style.display = n === 2 ? '' : 'none';
-  if (n === 1) renderTimeline();
-  if (n === 2) renderEquations();
+function resetEqSection() {
+  document.getElementById('eqSection').style.display = 'none';
+  document.getElementById('eqReveal').classList.remove('show');
+  document.getElementById('nextBtn').classList.remove('show');
 }
 
 // ── Phase 1: Timeline ────────────────────────────────────────
@@ -469,14 +444,21 @@ function placeCard(slot) {
     document.querySelectorAll('.val-card').forEach(c => c.classList.remove('selected'));
 
     const allDone = window._curCards.every(c => placedCards[c.slot] !== null);
-    if (allDone) setTimeout(() => showPhase(2), 500);
+    if (allDone) setTimeout(showEqSection, 500);
   } else {
     el.classList.add('err');
     setTimeout(goBack, 400);
   }
 }
 
-// ── Phase 2: Equation ────────────────────────────────────────
+// ── Equation section ─────────────────────────────────────────
+function showEqSection() {
+  renderEquations();
+  const sec = document.getElementById('eqSection');
+  sec.style.display = '';
+  sec.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
 function renderEquations() {
   document.getElementById('eqReveal').classList.remove('show');
   document.getElementById('nextBtn').classList.remove('show');
