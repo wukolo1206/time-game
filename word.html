@@ -11,7 +11,7 @@
 
     .nav { display: flex; justify-content: space-between; align-items: center;
            padding: 10px 16px; background: #fff; border-bottom: 1px solid #e0e0e0; }
-    .nav a { font-size: 14px; color: #666; text-decoration: none; }
+    .nav a  { font-size: 14px; color: #666; text-decoration: none; }
     .nav h2 { font-size: 16px; color: #333; font-weight: bold; }
     .nav span { width: 60px; }
 
@@ -37,7 +37,7 @@
           cursor: pointer; transition: all .15s; }
     .gp.on { background: #20c997; border-color: #20c997; color: #fff; }
 
-    .prog-row { display: flex; align-items: center; gap: 10px; }
+    .prog-row  { display: flex; align-items: center; gap: 10px; }
     .prog-label { font-size: 13px; color: #888; white-space: nowrap; }
     .prog-track { flex: 1; height: 6px; background: #dde3ff; border-radius: 3px; }
     .prog-fill  { height: 100%; background: #20c997; border-radius: 3px; transition: width .4s; }
@@ -50,101 +50,79 @@
     .prob-text { font-size: 16px; line-height: 1.9; color: #333;
                  padding-bottom: 14px; border-bottom: 1px dashed #e0e0e0; }
 
-    /* Phase steps */
-    .steps { display: flex; gap: 6px; justify-content: center; }
-    .step { width: 28px; height: 28px; border-radius: 50%; border: 2px solid #dde; display: flex;
-            align-items: center; justify-content: center; font-size: 12px; font-weight: bold;
-            color: #bbb; transition: all .3s; }
-    .step.done { background: #20c997; border-color: #20c997; color: #fff; }
+    /* Steps (2 only) */
+    .steps { display: flex; gap: 8px; justify-content: center; align-items: center; }
+    .step { width: 30px; height: 30px; border-radius: 50%; border: 2px solid #dde;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 12px; font-weight: bold; color: #bbb; transition: all .3s; }
+    .step.done   { background: #20c997; border-color: #20c997; color: #fff; }
     .step.active { background: #e6fcf5; border-color: #20c997; color: #20c997; }
+    .step-sep { color: #ddd; font-size: 18px; }
 
-    /* Phase 1: ask buttons */
-    .ask-prompt { font-size: 14px; font-weight: bold; color: #555; text-align: center; }
-    .ask-btns { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
-    .ask-btn { border: 2px solid #dde3ff; border-radius: 14px; background: #f8faff;
-               padding: 12px 16px; font-size: 15px; font-weight: bold; color: #666;
-               cursor: pointer; transition: all .2s; text-align: center; line-height: 1.4; }
-    .ask-btn:active { transform: scale(.95); }
-    .ask-btn.ok  { border-color: #20c997; background: #e6fcf5; color: #20c997; }
-    .ask-btn.err { animation: shake .3s ease; border-color: #ff6b6b; background: #fff5f5; }
+    /* ── Phase 1: Timeline ── */
+    .tl-prompt { font-size: 14px; font-weight: bold; color: #555; text-align: center; }
 
-    /* Phase 2: timeline */
-    .timeline { display: flex; align-items: center; justify-content: center;
-                gap: 6px; margin: 4px 0; }
-    .tl-box { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 5px; }
-    .tl-lbl { font-size: 11px; font-weight: bold; padding: 3px 8px; border-radius: 8px;
+    .timeline { display: flex; align-items: stretch; justify-content: center;
+                gap: 4px; margin: 4px 0; }
+    .tl-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+    .tl-lbl { font-size: 11px; font-weight: bold; padding: 3px 6px; border-radius: 8px;
               text-align: center; width: 100%; }
     .tl-lbl.start   { background: #fff3bf; color: #e67700; }
     .tl-lbl.elapsed { background: #dbe4ff; color: #4263eb; }
     .tl-lbl.end     { background: #d3f9d8; color: #2f9e44; }
 
-    .tl-slot { width: 100%; min-height: 54px; border: 2px dashed #ddd; border-radius: 12px;
+    .tl-arrow { font-size: 18px; color: #ccc; align-self: center;
+                padding-top: 26px; flex-shrink: 0; }
+
+    .tl-slot { width: 100%; min-height: 56px; border: 2px dashed #ddd; border-radius: 12px;
                display: flex; align-items: center; justify-content: center;
-               font-size: 14px; font-weight: bold; color: #bbb;
-               transition: border-color .2s, background .2s;
-               background: #fafafa; padding: 6px; text-align: center; line-height: 1.3; cursor: pointer; }
-    .tl-slot.pulse  { animation: pulse 1.2s ease-in-out infinite; border-color: #20c997; border-style: dashed; }
-    .tl-slot.locked-start   { border-color: #e67700; border-style: solid; background: #fffbf0;
+               font-size: 13px; font-weight: bold; color: #bbb;
+               background: #fafafa; padding: 6px; text-align: center; line-height: 1.3;
+               cursor: pointer; transition: border-color .2s, background .2s; }
+    .tl-slot.active   { border-color: #20c997; animation: pulse 1.2s ease-in-out infinite; }
+    .tl-slot.unknown  { font-size: 28px; color: #ddd; cursor: default;
+                        background: #f5f5f5; border-style: solid; border-color: #e0e0e0; }
+    .tl-slot.locked-start   { border-style: solid; border-color: #e67700; background: #fffbf0;
                                color: #e67700; cursor: default;
                                animation: popIn .35s cubic-bezier(.17,.67,.44,1.4); }
-    .tl-slot.locked-elapsed { border-color: #4263eb; border-style: solid; background: #f0f4ff;
+    .tl-slot.locked-elapsed { border-style: solid; border-color: #4263eb; background: #f0f4ff;
                                color: #4263eb; cursor: default;
                                animation: popIn .35s cubic-bezier(.17,.67,.44,1.4); }
-    .tl-slot.locked-end     { border-color: #2f9e44; border-style: solid; background: #f3fdf5;
+    .tl-slot.locked-end     { border-style: solid; border-color: #2f9e44; background: #f3fdf5;
                                color: #2f9e44; cursor: default;
                                animation: popIn .35s cubic-bezier(.17,.67,.44,1.4); }
-    .tl-slot.unknown { border-color: #aaa; background: #f5f5f5; color: #999; font-size: 22px;
-                       cursor: default; }
-    .tl-slot.err { animation: shake .3s ease; border-color: #ff6b6b !important; }
-    .tl-arrow { font-size: 22px; color: #ccc; flex-shrink: 0; }
+    .tl-slot.err { animation: shake .3s ease !important; border-color: #ff6b6b !important; }
 
-    .card-pool { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; min-height: 52px; }
+    .card-pool { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
     .val-card { border: 2px solid #a5d8ff; border-radius: 12px; padding: 10px 14px;
                 font-size: 14px; font-weight: bold; color: #555; cursor: pointer;
                 background: #f0f8ff; transition: all .2s; user-select: none; }
-    .val-card:active { transform: scale(.95); }
     .val-card.selected { border-color: #20c997; background: #e6fcf5; color: #20c997;
                          box-shadow: 0 0 0 3px rgba(32,201,151,.2); }
     .val-card.gone { visibility: hidden; pointer-events: none; }
 
-    /* Phase 3: equation */
+    /* ── Phase 2: Equation ── */
     .eq-prompt { font-size: 14px; font-weight: bold; color: #555; text-align: center; }
-    .eq-btns { display: flex; flex-direction: column; gap: 8px; }
-    .eq-btn { border: 2px solid #dde3ff; border-radius: 14px; background: #f8faff;
-              padding: 12px 14px; font-size: 14px; font-weight: bold; color: #444;
+    .eq-options { display: flex; flex-direction: column; gap: 8px; }
+    .eq-opt { border: 2px solid #dde3ff; border-radius: 14px; background: #f8faff;
+              padding: 13px 14px; font-size: 14px; font-weight: bold; color: #444;
               cursor: pointer; transition: all .2s; text-align: center; }
-    .eq-btn .unk { color: #e67700; }
-    .eq-btn:active { transform: scale(.98); }
-    .eq-btn.ok  { border-color: #20c997; background: #e6fcf5; color: #20c997; }
-    .eq-btn.err { animation: shake .3s ease; border-color: #ff6b6b; background: #fff5f5; }
+    .eq-opt:active { transform: scale(.98); }
+    .eq-opt.ok  { border-color: #20c997; background: #e6fcf5; color: #20c997;
+                  animation: popIn .3s cubic-bezier(.17,.67,.44,1.4); }
+    .eq-opt.err { animation: shake .3s ease; border-color: #ff6b6b; background: #fff5f5; }
 
-    /* Phase 4: numpad */
-    .ans-display { font-size: 28px; font-weight: bold; text-align: center; color: #20c997;
-                   letter-spacing: 2px; min-height: 40px; }
-    .ans-display .ph1 { color: #20c997; }
-    .ans-display .ph2 { color: #aaa; }
-    .ans-display .ph-done { color: #2f9e44; }
-    .ans-display .prefix { color: #555; font-size: 22px; }
-    .np-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-    .nk { border: none; border-radius: 12px; font-size: 22px; font-weight: bold;
-          padding: 14px 8px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
-    .nk:active { opacity: .75; }
-    .nk.d  { background: #f1f3ff; color: #333; }
-    .nk.bs { background: #ffe3e3; color: #c92a2a; font-size: 18px; }
-    .nk.ok { background: #20c997; color: #fff; font-size: 18px; }
-    .nk.ok:disabled { background: #ccc; }
-    .nk.nxt { background: #e6fcf5; color: #20c997; font-size: 16px; }
-
-    .result-box { border-radius: 14px; padding: 12px 16px; text-align: center; display: none; }
-    .result-box.ok  { background: #edfff5; border: 2px solid #51cf66; display: block; }
-    .result-box.err { background: #fff5f5; border: 2px solid #ff6b6b; display: block; }
-    .result-box .rt { font-size: 18px; font-weight: bold; color: #2f9e44; }
-    .result-box.err .rt { color: #c92a2a; }
-    .result-box .rs { font-size: 13px; color: #666; margin-top: 4px; }
+    /* Equation reveal after correct selection */
+    .eq-reveal { border-radius: 16px; background: #f0fdf4; border: 2px solid #51cf66;
+                 padding: 16px; text-align: center; display: none; }
+    .eq-reveal.show { display: block; animation: fadeUp .4s ease; }
+    .eq-abstract { font-size: 13px; font-weight: bold; color: #888; margin-bottom: 8px; }
+    .eq-concrete { font-size: 20px; font-weight: bold; color: #2f9e44; line-height: 1.6; }
+    .eq-concrete .qs { color: #e67700; }
 
     .next-btn { border: none; border-radius: 14px; background: #20c997; color: #fff;
                 font-size: 18px; font-weight: bold; padding: 13px; cursor: pointer;
-                display: none; width: 100%; margin-top: 4px; }
+                display: none; width: 100%; }
     .next-btn.show { display: block; animation: fadeUp .4s ease; }
 
     /* Done */
@@ -155,19 +133,20 @@
                   animation: popIn .5s cubic-bezier(.17,.67,.44,1.4); }
     .done-title { font-size: 26px; font-weight: bold; color: #2f9e44; margin-bottom: 6px; }
     .done-group { display: inline-block; background: #e6fcf5; color: #20c997;
-                  font-size: 14px; font-weight: bold; border-radius: 20px; padding: 4px 14px; margin-bottom: 16px; }
-    .done-btns  { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+                  font-size: 14px; font-weight: bold; border-radius: 20px;
+                  padding: 4px 14px; margin-bottom: 16px; }
+    .done-btns  { display: flex; gap: 10px; justify-content: center; }
     .done-btn { border: none; border-radius: 14px; font-size: 16px; font-weight: bold;
                 padding: 12px 22px; cursor: pointer; }
     .done-btn.retry { background: #f1f3ff; color: #4263eb; }
     .done-btn.next  { background: #20c997; color: #fff; }
     .done-btn.next.hide { display: none; }
 
-    .phase-section { display: flex; flex-direction: column; gap: 14px; }
+    .phase-sec { display: flex; flex-direction: column; gap: 14px; }
 
-    @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-7px)} 75%{transform:translateX(7px)} }
-    @keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(32,201,151,.35)} 50%{box-shadow:0 0 0 8px rgba(32,201,151,0)} }
-    @keyframes popIn { 0%{transform:scale(.7);opacity:0} 100%{transform:scale(1);opacity:1} }
+    @keyframes shake  { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-7px)} 75%{transform:translateX(7px)} }
+    @keyframes pulse  { 0%,100%{box-shadow:0 0 0 0 rgba(32,201,151,.4)} 50%{box-shadow:0 0 0 8px rgba(32,201,151,0)} }
+    @keyframes popIn  { 0%{transform:scale(.7);opacity:0} 100%{transform:scale(1);opacity:1} }
     @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
   </style>
 </head>
@@ -193,42 +172,31 @@
     <div class="prog-track"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
   </div>
 
-  <!-- Main problem card -->
   <div class="main-card" id="mainCard">
-    <div class="steps" id="steps">
-      <div class="step" id="s1">1</div>
+    <!-- Step indicator -->
+    <div class="steps">
+      <div class="step active" id="s1">1</div>
+      <div class="step-sep">›</div>
       <div class="step" id="s2">2</div>
-      <div class="step" id="s3">3</div>
-      <div class="step" id="s4">4</div>
     </div>
 
     <div class="prob-text" id="probText"></div>
 
-    <!-- Phase 1: identify unknown -->
-    <div class="phase-section" id="phase1">
-      <div class="ask-prompt">這題要求的是哪一個？</div>
-      <div class="ask-btns">
-        <button class="ask-btn" onclick="tryAsk('start')">🟠 開始時刻</button>
-        <button class="ask-btn" onclick="tryAsk('elapsed')">🔵 經過時間</button>
-        <button class="ask-btn" onclick="tryAsk('end')">🟢 結束時刻</button>
-      </div>
-    </div>
-
-    <!-- Phase 2: timeline mapping -->
-    <div class="phase-section" id="phase2" style="display:none">
-      <div class="ask-prompt">把數值放到正確的格子裡</div>
+    <!-- Phase 1: Timeline placement -->
+    <div class="phase-sec" id="phase1">
+      <div class="tl-prompt">把數值放到正確的格子裡</div>
       <div class="timeline">
-        <div class="tl-box">
+        <div class="tl-col">
           <div class="tl-lbl start">開始時刻</div>
           <div class="tl-slot" id="slotStart" onclick="placeCard('start')">點我放入</div>
         </div>
         <div class="tl-arrow">→</div>
-        <div class="tl-box">
+        <div class="tl-col">
           <div class="tl-lbl elapsed">經過時間</div>
           <div class="tl-slot" id="slotElapsed" onclick="placeCard('elapsed')">點我放入</div>
         </div>
         <div class="tl-arrow">→</div>
-        <div class="tl-box">
+        <div class="tl-col">
           <div class="tl-lbl end">結束時刻</div>
           <div class="tl-slot" id="slotEnd" onclick="placeCard('end')">點我放入</div>
         </div>
@@ -236,19 +204,13 @@
       <div class="card-pool" id="cardPool"></div>
     </div>
 
-    <!-- Phase 3: equation -->
-    <div class="phase-section" id="phase3" style="display:none">
+    <!-- Phase 2: Equation selection + reveal -->
+    <div class="phase-sec" id="phase2" style="display:none">
       <div class="eq-prompt">選出正確的算式結構</div>
-      <div class="eq-btns" id="eqBtns"></div>
-    </div>
-
-    <!-- Phase 4: answer -->
-    <div class="phase-section" id="phase4" style="display:none">
-      <div class="ans-display" id="ansDisplay">—</div>
-      <div class="np-grid" id="npGrid"></div>
-      <div class="result-box" id="resultBox">
-        <div class="rt" id="resultTitle"></div>
-        <div class="rs" id="resultSub"></div>
+      <div class="eq-options" id="eqOptions"></div>
+      <div class="eq-reveal" id="eqReveal">
+        <div class="eq-abstract" id="eqAbstract"></div>
+        <div class="eq-concrete" id="eqConcrete"></div>
       </div>
       <button class="next-btn" id="nextBtn" onclick="nextProblem()">下一題 →</button>
     </div>
@@ -257,7 +219,7 @@
   <!-- Done banner -->
   <div class="done-banner" id="doneBanner">
     <div class="done-star">⭐</div>
-    <div class="done-title">全部答對！</div>
+    <div class="done-title">全部完成！</div>
     <div class="done-group" id="doneGroup"></div>
     <div class="done-btns">
       <button class="done-btn retry" onclick="initGroup()">再挑戰一次</button>
@@ -267,160 +229,137 @@
 </div>
 
 <script>
-// ── Problem data ─────────────────────────────────────────────
 // ask: 'start'|'elapsed'|'end'
-// cards: array of {val, slot} — known values to place on timeline
-// eq: 'add'(+) | 'sub_elapsed'(-elapsed) | 'sub_start'(-start) maps to correct equation
-// ansType: 'min'|'hm'|'time'|'time24'
-// ans: {h, m} — h=hours or 0 for pure-minute answers
-// ansPeriod: 'am'|'pm'|'' (shown as label, not entered)
-// ansLabel: display string of correct answer
-
-const EQ_ADD      = '開始時刻 ＋ 經過時間 ＝ 結束時刻';
-const EQ_SUB_ST   = '結束時刻 － 開始時刻 ＝ 經過時間';
-const EQ_SUB_EL   = '結束時刻 － 經過時間 ＝ 開始時刻';
-const EQ_MAP = { end: EQ_ADD, elapsed: EQ_SUB_ST, start: EQ_SUB_EL };
+// cards: [{val, slot}] — known values only (2 cards)
+// startVal / elapsedVal / endVal: display strings for the equation reveal
 
 const PROBLEMS = [
-  // ── G1 求經過時間（分鐘）────────────────────────────────────
+  // ── Group 1 ── 2 elapsed + 2 end + 1 start ──────────────
   { text:'洗衣機從下午6：07開始運轉洗衣服，到下午6：42洗好，共花了幾分鐘？',
     ask:'elapsed',
-    cards:[{val:'下午6時7分',slot:'start'},{val:'下午6時42分',slot:'end'}],
-    ans:{h:0,m:35}, ansType:'min', ansPeriod:'', ansLabel:'35分鐘' },
+    cards:[{val:'下午6時7分',slot:'start'},{val:'下午6時42分',slot:'end'}] },
   { text:'佳煜練習跑步，從上午6時18分跑到上午6時52分，他一共跑了幾分鐘？',
     ask:'elapsed',
-    cards:[{val:'上午6時18分',slot:'start'},{val:'上午6時52分',slot:'end'}],
-    ans:{h:0,m:34}, ansType:'min', ansPeriod:'', ansLabel:'34分鐘' },
-  { text:'媽媽上午8時17分出門買菜，上午8時56分買完菜回到家，媽媽買菜花了幾分鐘？',
-    ask:'elapsed',
-    cards:[{val:'上午8時17分',slot:'start'},{val:'上午8時56分',slot:'end'}],
-    ans:{h:0,m:39}, ansType:'min', ansPeriod:'', ansLabel:'39分鐘' },
-  { text:'順英從下午1時14分開始燙衣服，一直到下午1時52分才燙完所有的衣服，她燙衣服一共花了幾分鐘？',
-    ask:'elapsed',
-    cards:[{val:'下午1時14分',slot:'start'},{val:'下午1時52分',slot:'end'}],
-    ans:{h:0,m:38}, ansType:'min', ansPeriod:'', ansLabel:'38分鐘' },
-  { text:'現在是下午5時26分，還差幾分鐘就是下午5時55分？',
-    ask:'elapsed',
-    cards:[{val:'下午5時26分',slot:'start'},{val:'下午5時55分',slot:'end'}],
-    ans:{h:0,m:29}, ansType:'min', ansPeriod:'', ansLabel:'29分鐘' },
-  // ── G2 求結束時刻（加分鐘）──────────────────────────────────
+    cards:[{val:'上午6時18分',slot:'start'},{val:'上午6時52分',slot:'end'}] },
   { text:'現在是上午6時20分，再過35分鐘，是上午幾時幾分？',
     ask:'end',
-    cards:[{val:'上午6時20分',slot:'start'},{val:'35分',slot:'elapsed'}],
-    ans:{h:6,m:55}, ansType:'time', ansPeriod:'am', ansLabel:'上午6時55分' },
-  { text:'爸爸在上午8時13分開車去出差，43分鐘後到達目的地，到達的時間是上午幾時幾分？',
-    ask:'end',
-    cards:[{val:'上午8時13分',slot:'start'},{val:'43分',slot:'elapsed'}],
-    ans:{h:8,m:56}, ansType:'time', ansPeriod:'am', ansLabel:'上午8時56分' },
-  { text:'媽媽從15時28分開始煮紅豆湯，煮湯要花25分鐘，煮好時是幾時幾分？',
-    ask:'end',
-    cards:[{val:'15時28分',slot:'start'},{val:'25分',slot:'elapsed'}],
-    ans:{h:15,m:53}, ansType:'time24', ansPeriod:'', ansLabel:'15時53分' },
+    cards:[{val:'上午6時20分',slot:'start'},{val:'35分鐘',slot:'elapsed'}] },
   { text:'娟娟從下午2時19分開始拖地，一共拖了28分鐘，拖完地時是下午幾時幾分？',
     ask:'end',
-    cards:[{val:'下午2時19分',slot:'start'},{val:'28分',slot:'elapsed'}],
-    ans:{h:2,m:47}, ansType:'time', ansPeriod:'pm', ansLabel:'下午2時47分' },
-  { text:'哥哥從家裡到學校要35分鐘，他上午9時15分從家裡出發，到學校是上午幾時幾分？',
-    ask:'end',
-    cards:[{val:'上午9時15分',slot:'start'},{val:'35分',slot:'elapsed'}],
-    ans:{h:9,m:50}, ansType:'time', ansPeriod:'am', ansLabel:'上午9時50分' },
-  // ── G3 求開始時刻（減分鐘）──────────────────────────────────
-  { text:'姐姐寫數學考卷花了48分鐘，寫完的時間是下午4時50分，她是下午幾時幾分開始寫數學考卷的？',
-    ask:'start',
-    cards:[{val:'48分',slot:'elapsed'},{val:'下午4時50分',slot:'end'}],
-    ans:{h:4,m:2}, ansType:'time', ansPeriod:'pm', ansLabel:'下午4時2分' },
+    cards:[{val:'下午2時19分',slot:'start'},{val:'28分鐘',slot:'elapsed'}] },
   { text:'小紜寫功課花了48分鐘，寫完功課是下午5時53分，小紜是下午幾時幾分開始寫功課的？',
     ask:'start',
-    cards:[{val:'48分',slot:'elapsed'},{val:'下午5時53分',slot:'end'}],
-    ans:{h:5,m:5}, ansType:'time', ansPeriod:'pm', ansLabel:'下午5時5分' },
-  { text:'寧紜看卡通花了35分鐘，看完是14時38分，寧紜是幾時幾分開始看卡通的？',
-    ask:'start',
-    cards:[{val:'35分',slot:'elapsed'},{val:'14時38分',slot:'end'}],
-    ans:{h:14,m:3}, ansType:'time24', ansPeriod:'', ansLabel:'14時3分' },
+    cards:[{val:'48分鐘',slot:'elapsed'},{val:'下午5時53分',slot:'end'}] },
+
+  // ── Group 2 ── 2 elapsed + 2 end + 1 start ──────────────
+  { text:'順英從下午1時14分開始燙衣服，一直到下午1時52分才燙完所有的衣服，她燙衣服一共花了幾分鐘？',
+    ask:'elapsed',
+    cards:[{val:'下午1時14分',slot:'start'},{val:'下午1時52分',slot:'end'}] },
+  { text:'現在是下午5時26分，還差幾分鐘就是下午5時55分？',
+    ask:'elapsed',
+    cards:[{val:'下午5時26分',slot:'start'},{val:'下午5時55分',slot:'end'}] },
+  { text:'爸爸在上午8時13分開車去出差，43分鐘後到達目的地，到達的時間是上午幾時幾分？',
+    ask:'end',
+    cards:[{val:'上午8時13分',slot:'start'},{val:'43分鐘',slot:'elapsed'}] },
+  { text:'哥哥從家裡到學校要35分鐘，他上午9時15分從家裡出發，到學校是上午幾時幾分？',
+    ask:'end',
+    cards:[{val:'上午9時15分',slot:'start'},{val:'35分鐘',slot:'elapsed'}] },
   { text:'爸爸從家裡到公司上班需要26分鐘，公司上班的時間為上午8時30分，他最晚要在上午幾時幾分從家裡出發？',
     ask:'start',
-    cards:[{val:'26分',slot:'elapsed'},{val:'上午8時30分',slot:'end'}],
-    ans:{h:8,m:4}, ansType:'time', ansPeriod:'am', ansLabel:'上午8時4分' },
-  { text:'小琪從家裡到圖書館要走18分鐘，她下午3時40分到達圖書館，她是在下午幾時幾分從家裡出發的？',
-    ask:'start',
-    cards:[{val:'18分',slot:'elapsed'},{val:'下午3時40分',slot:'end'}],
-    ans:{h:3,m:22}, ansType:'time', ansPeriod:'pm', ansLabel:'下午3時22分' },
-  // ── G4 求經過時間（時分）────────────────────────────────────
-  { text:'書帆和同學一起去科博館看展覽，下午1時40分進場，15時50分出場，一共是經過多少時間？',
+    cards:[{val:'26分鐘',slot:'elapsed'},{val:'上午8時30分',slot:'end'}] },
+
+  // ── Group 3 ── 2 elapsed + 1 end + 2 start ──────────────
+  { text:'媽媽上午8時17分出門買菜，上午8時56分買完菜回到家，媽媽買菜花了幾分鐘？',
     ask:'elapsed',
-    cards:[{val:'下午1時40分',slot:'start'},{val:'15時50分',slot:'end'}],
-    ans:{h:2,m:10}, ansType:'hm', ansPeriod:'', ansLabel:'2小時10分鐘' },
-  { text:'姐姐搭高鐵，上午6時26分從臺北站出發，上午8時40分到達左營站，行車時間是幾小時幾分鐘？',
-    ask:'elapsed',
-    cards:[{val:'上午6時26分',slot:'start'},{val:'上午8時40分',slot:'end'}],
-    ans:{h:2,m:14}, ansType:'hm', ansPeriod:'', ansLabel:'2小時14分鐘' },
+    cards:[{val:'上午8時17分',slot:'start'},{val:'上午8時56分',slot:'end'}] },
   { text:'正翔從下午2時8分開始寫功課，到下午3時15分才寫完，他寫功課一共花了幾小時幾分鐘？',
     ask:'elapsed',
-    cards:[{val:'下午2時8分',slot:'start'},{val:'下午3時15分',slot:'end'}],
-    ans:{h:1,m:7}, ansType:'hm', ansPeriod:'', ansLabel:'1小時7分鐘' },
-  { text:'爸爸下午2時32分出門，下午4時38分回來，爸爸出去幾小時幾分鐘？',
+    cards:[{val:'下午2時8分',slot:'start'},{val:'下午3時15分',slot:'end'}] },
+  { text:'媽媽從15時28分開始煮紅豆湯，煮湯要花25分鐘，煮好時是幾時幾分？',
+    ask:'end',
+    cards:[{val:'15時28分',slot:'start'},{val:'25分鐘',slot:'elapsed'}] },
+  { text:'姐姐寫數學考卷花了48分鐘，寫完的時間是下午4時50分，她是下午幾時幾分開始寫數學考卷的？',
+    ask:'start',
+    cards:[{val:'48分鐘',slot:'elapsed'},{val:'下午4時50分',slot:'end'}] },
+  { text:'小琪從家裡到圖書館要走18分鐘，她下午3時40分到達圖書館，她是在下午幾時幾分從家裡出發的？',
+    ask:'start',
+    cards:[{val:'18分鐘',slot:'elapsed'},{val:'下午3時40分',slot:'end'}] },
+
+  // ── Group 4 ── 2 elapsed + 2 end + 1 start ──────────────
+  { text:'書帆和同學一起去科博館看展覽，下午1時40分進場，15時50分出場，一共經過多少時間？',
     ask:'elapsed',
-    cards:[{val:'下午2時32分',slot:'start'},{val:'下午4時38分',slot:'end'}],
-    ans:{h:2,m:6}, ansType:'hm', ansPeriod:'', ansLabel:'2小時6分鐘' },
-  { text:'家語和同學參觀書展，下午1時30分進入，下午5時52分離開，她們參觀書展待了幾小時幾分鐘？',
+    cards:[{val:'下午1時40分',slot:'start'},{val:'15時50分',slot:'end'}] },
+  { text:'姐姐搭高鐵，上午6時26分從臺北站出發，上午8時40分到達左營站，行車時間是幾小時幾分鐘？',
     ask:'elapsed',
-    cards:[{val:'下午1時30分',slot:'start'},{val:'下午5時52分',slot:'end'}],
-    ans:{h:4,m:22}, ansType:'hm', ansPeriod:'', ansLabel:'4小時22分鐘' },
-  // ── G5 求結束時刻（加時分）──────────────────────────────────
+    cards:[{val:'上午6時26分',slot:'start'},{val:'上午8時40分',slot:'end'}] },
   { text:'哥哥從下午4時32分開始跑步，跑了1小時25分鐘，跑完的時間是下午幾時幾分？',
     ask:'end',
-    cards:[{val:'下午4時32分',slot:'start'},{val:'1小時25分',slot:'elapsed'}],
-    ans:{h:5,m:57}, ansType:'time', ansPeriod:'pm', ansLabel:'下午5時57分' },
+    cards:[{val:'下午4時32分',slot:'start'},{val:'1小時25分鐘',slot:'elapsed'}] },
   { text:'慶生會從上午10時10分開始，進行了1小時45分鐘，慶生會在上午幾時幾分結束？',
     ask:'end',
-    cards:[{val:'上午10時10分',slot:'start'},{val:'1小時45分',slot:'elapsed'}],
-    ans:{h:11,m:55}, ansType:'time', ansPeriod:'am', ansLabel:'上午11時55分' },
+    cards:[{val:'上午10時10分',slot:'start'},{val:'1小時45分鐘',slot:'elapsed'}] },
+  { text:'寧紜看卡通花了35分鐘，看完是14時38分，寧紜是幾時幾分開始看卡通的？',
+    ask:'start',
+    cards:[{val:'35分鐘',slot:'elapsed'},{val:'14時38分',slot:'end'}] },
+
+  // ── Group 5 ── 2 elapsed + 2 end + 1 start ──────────────
+  { text:'爸爸下午2時32分出門，下午4時38分回來，爸爸出去幾小時幾分鐘？',
+    ask:'elapsed',
+    cards:[{val:'下午2時32分',slot:'start'},{val:'下午4時38分',slot:'end'}] },
+  { text:'家語和同學參觀書展，下午1時30分進入，下午5時52分離開，她們參觀書展待了幾小時幾分鐘？',
+    ask:'elapsed',
+    cards:[{val:'下午1時30分',slot:'start'},{val:'下午5時52分',slot:'end'}] },
   { text:'意芳從13時2分開始寫功課，寫了3小時，寫完是下午幾時幾分？',
     ask:'end',
-    cards:[{val:'13時2分',slot:'start'},{val:'3小時',slot:'elapsed'}],
-    ans:{h:4,m:2}, ansType:'time', ansPeriod:'pm', ansLabel:'下午4時2分' },
+    cards:[{val:'13時2分',slot:'start'},{val:'3小時',slot:'elapsed'}] },
+  { text:'爸爸4：20PM開車從臺中出發，花了3小時35分鐘到達高雄，爸爸到達高雄時是幾時幾分？（24時制）',
+    ask:'end',
+    cards:[{val:'16時20分',slot:'start'},{val:'3小時35分鐘',slot:'elapsed'}] },
   { text:'叔叔打羽球花了2小時40分鐘，打完的時間是下午4時55分，叔叔從下午幾時幾分開始打羽球？',
     ask:'start',
-    cards:[{val:'2小時40分',slot:'elapsed'},{val:'下午4時55分',slot:'end'}],
-    ans:{h:2,m:15}, ansType:'time', ansPeriod:'pm', ansLabel:'下午2時15分' },
-  { text:'爸爸4：20PM開車從臺中出發，花了3小時35分鐘到達高雄，爸爸到達高雄時是幾時幾分？（用24時制）',
-    ask:'end',
-    cards:[{val:'16時20分',slot:'start'},{val:'3小時35分',slot:'elapsed'}],
-    ans:{h:19,m:55}, ansType:'time24', ansPeriod:'', ansLabel:'19時55分' },
+    cards:[{val:'2小時40分鐘',slot:'elapsed'},{val:'下午4時55分',slot:'end'}] },
 ];
 
-// ── State ────────────────────────────────────────────────────
+// ── Equation templates ──────────────────────────────────────
+const EQ_TMPL = {
+  end:     '開始時刻 ＋ 經過時間 ＝ 結束時刻',
+  elapsed: '結束時刻 － 開始時刻 ＝ 經過時間',
+  start:   '結束時刻 － 經過時間 ＝ 開始時刻',
+};
+const EQ_ALL = [EQ_TMPL.end, EQ_TMPL.elapsed, EQ_TMPL.start];
+
+function eqColorHtml(s) {
+  return s.replace(/開始時刻/g, '<span style="color:#e67700">開始時刻</span>')
+          .replace(/經過時間/g, '<span style="color:#4263eb">經過時間</span>')
+          .replace(/結束時刻/g, '<span style="color:#2f9e44">結束時刻</span>');
+}
+
+// ── State ───────────────────────────────────────────────────
 const GROUP_SIZE = 5;
 const NUM_GROUPS = Math.ceil(PROBLEMS.length / GROUP_SIZE);
 
 let curGroup   = 0;
-let groupProbs = [];   // shuffled indices for this group
-let curIdx     = 0;    // index into groupProbs
-let phase      = 1;    // 1–4
-let doneCount  = 0;    // how many answered correctly this group
+let groupProbs = [];
+let curIdx     = 0;
+let phase      = 1;
+let doneCount  = 0;
 
-// numpad state
-let npPhase  = 'h';   // 'h' | 'm' | 'done'
-let npH      = '';
-let npM      = '';
+let selectedCard = null;
+let placedCards  = {};  // {start|elapsed|end: val|null}
 
-// card placement state
-let selectedCard = null;  // index into current prob cards, or null
-let placedCards  = {};    // { start: val, elapsed: val, end: val } — null until placed
-
-// ── Group init ───────────────────────────────────────────────
+// ── Group management ────────────────────────────────────────
 function buildGroupBar() {
   const bar = document.getElementById('groupBar');
   bar.innerHTML = '';
   for (let g = 0; g < NUM_GROUPS; g++) {
-    const start = g * GROUP_SIZE + 1;
-    const end   = Math.min(start + GROUP_SIZE - 1, PROBLEMS.length);
-    const btn   = document.createElement('button');
-    btn.className = 'gp' + (g === curGroup ? ' on' : '');
-    btn.textContent = start + '–' + end;
-    btn.onclick = () => { curGroup = g; initGroup(); };
-    btn.id = 'gp-' + g;
-    bar.appendChild(btn);
+    const s = g * GROUP_SIZE + 1;
+    const e = Math.min(s + GROUP_SIZE - 1, PROBLEMS.length);
+    const b = document.createElement('button');
+    b.className = 'gp' + (g === curGroup ? ' on' : '');
+    b.textContent = s + '–' + e;
+    b.onclick = () => { curGroup = g; initGroup(); };
+    b.id = 'gp-' + g;
+    bar.appendChild(b);
   }
 }
 
@@ -431,111 +370,75 @@ function refreshGroupBar() {
 function initGroup() {
   refreshGroupBar();
   const start = curGroup * GROUP_SIZE;
-  const end   = Math.min(start + GROUP_SIZE, PROBLEMS.length);
-  const arr   = [];
-  for (let i = start; i < end; i++) arr.push(i);
+  const arr = Array.from({length: Math.min(GROUP_SIZE, PROBLEMS.length - start)}, (_, i) => start + i);
   for (let i = arr.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [arr[i], arr[j]] = [arr[j], arr[i]];
   }
   groupProbs = arr;
-  curIdx = 0;
-  doneCount = 0;
+  curIdx = 0; doneCount = 0;
   document.getElementById('mainCard').style.display = '';
   document.getElementById('doneBanner').classList.remove('show');
   loadProblem();
 }
 
+// ── Load problem ─────────────────────────────────────────────
 function loadProblem() {
   const p = PROBLEMS[groupProbs[curIdx]];
-  phase = 1;
-  selectedCard = null;
-  placedCards = {};
-  npH = ''; npM = ''; npPhase = 'h';
+  phase = 1; selectedCard = null; placedCards = {};
 
-  // progress
   const total = groupProbs.length;
   document.getElementById('progLabel').textContent = doneCount + ' / ' + total;
   document.getElementById('progFill').style.width = (doneCount / total * 100) + '%';
 
-  // problem text
   document.getElementById('probText').textContent = p.text;
 
-  // steps
-  renderSteps();
+  setSteps(1);
   showPhase(1);
 }
 
-// ── Steps ────────────────────────────────────────────────────
-function renderSteps() {
-  [1,2,3,4].forEach(n => {
-    const el = document.getElementById('s' + n);
-    el.className = 'step' + (n < phase ? ' done' : n === phase ? ' active' : '');
-  });
+function setSteps(n) {
+  document.getElementById('s1').className = 'step' + (n > 1 ? ' done' : n === 1 ? ' active' : '');
+  document.getElementById('s2').className = 'step' + (n > 2 ? ' done' : n === 2 ? ' active' : '');
 }
 
-// ── Phase management ─────────────────────────────────────────
 function showPhase(n) {
   phase = n;
-  renderSteps();
-  [1,2,3,4].forEach(i =>
-    document.getElementById('phase' + i).style.display = i === n ? '' : 'none'
-  );
-  document.getElementById('resultBox').className = 'result-box';
-  document.getElementById('nextBtn').classList.remove('show');
-
-  if (n === 2) renderTimeline();
-  if (n === 3) renderEquations();
-  if (n === 4) renderNumpad();
+  setSteps(n);
+  document.getElementById('phase1').style.display = n === 1 ? '' : 'none';
+  document.getElementById('phase2').style.display = n === 2 ? '' : 'none';
+  if (n === 1) renderTimeline();
+  if (n === 2) renderEquations();
 }
 
-// ── Phase 1: ask ─────────────────────────────────────────────
-function tryAsk(slot) {
-  const p = PROBLEMS[groupProbs[curIdx]];
-  const btns = document.querySelectorAll('.ask-btn');
-  if (slot === p.ask) {
-    btns.forEach(b => { if (b.textContent.includes(labelFor(slot))) b.classList.add('ok'); });
-    setTimeout(() => showPhase(2), 600);
-  } else {
-    btns.forEach(b => { if (b.textContent.includes(labelFor(slot))) b.classList.add('err'); });
-    setTimeout(() => btns.forEach(b => b.className = 'ask-btn'), 400);
-  }
-}
-
-function labelFor(slot) {
-  return slot === 'start' ? '開始時刻' : slot === 'elapsed' ? '經過時間' : '結束時刻';
-}
-
-// ── Phase 2: timeline ────────────────────────────────────────
+// ── Phase 1: Timeline ────────────────────────────────────────
 function renderTimeline() {
   const p = PROBLEMS[groupProbs[curIdx]];
   placedCards = {};
   selectedCard = null;
 
-  // reset slots
-  ['start','elapsed','end'].forEach(slot => {
+  ['start', 'elapsed', 'end'].forEach(slot => {
     const el = document.getElementById('slot' + cap(slot));
     if (slot === p.ask) {
       el.textContent = '？';
       el.className = 'tl-slot unknown';
-      placedCards[slot] = '?';  // pre-filled
+      placedCards[slot] = '?';
     } else {
       el.textContent = '點我放入';
-      el.className = 'tl-slot pulse';
+      el.className = 'tl-slot active';
       placedCards[slot] = null;
     }
   });
 
-  // build card pool
   const pool = document.getElementById('cardPool');
   pool.innerHTML = '';
   p.cards.forEach((c, i) => {
-    const div = document.createElement('div');
-    div.className = 'val-card';
-    div.textContent = c.val;
-    div.dataset.idx = i;
-    div.onclick = () => selectCard(i);
-    pool.appendChild(div);
+    const d = document.createElement('div');
+    d.className = 'val-card';
+    d.textContent = c.val;
+    d.dataset.idx = i;
+    d.onclick = () => selectCard(i);
+    pool.appendChild(d);
   });
 }
 
@@ -544,251 +447,124 @@ function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 function selectCard(idx) {
   selectedCard = idx;
   document.querySelectorAll('.val-card').forEach((c, i) =>
-    c.classList.toggle('selected', i === idx)
-  );
+    c.classList.toggle('selected', i === idx));
 }
 
 function placeCard(slot) {
   const p = PROBLEMS[groupProbs[curIdx]];
-  if (slot === p.ask) return;           // unknown slot — can't place
-  if (placedCards[slot] !== null) return; // already filled
+  if (slot === p.ask) return;
+  if (placedCards[slot] !== null) return;
 
+  const el = document.getElementById('slot' + cap(slot));
   if (selectedCard === null) {
-    // prompt to select a card first
-    const el = document.getElementById('slot' + cap(slot));
     el.classList.add('err');
-    setTimeout(() => { el.classList.remove('err'); el.classList.add('pulse'); }, 400);
+    setTimeout(() => { el.classList.remove('err'); el.classList.add('active'); }, 400);
     return;
   }
 
   const card = p.cards[selectedCard];
   if (card.slot === slot) {
-    // correct
-    const el = document.getElementById('slot' + cap(slot));
     el.textContent = card.val;
     el.className = 'tl-slot locked-' + slot;
     placedCards[slot] = card.val;
-
-    // mark card as placed
     document.querySelectorAll('.val-card')[selectedCard].classList.add('gone');
     selectedCard = null;
     document.querySelectorAll('.val-card').forEach(c => c.classList.remove('selected'));
 
-    // check if all filled
-    const allFilled = p.cards.every(c => placedCards[c.slot] !== null);
-    if (allFilled) {
-      setTimeout(() => showPhase(3), 600);
-    }
+    const allDone = p.cards.every(c => placedCards[c.slot] !== null);
+    if (allDone) setTimeout(() => showPhase(2), 500);
   } else {
-    // wrong
-    const el = document.getElementById('slot' + cap(slot));
     el.classList.add('err');
-    setTimeout(() => { el.classList.remove('err'); if (!placedCards[slot]) el.classList.add('pulse'); }, 400);
+    setTimeout(() => { el.classList.remove('err'); el.classList.add('active'); }, 400);
   }
 }
 
-// ── Phase 3: equation ────────────────────────────────────────
-const EQ_OPTIONS = [EQ_ADD, EQ_SUB_ST, EQ_SUB_EL];
-
+// ── Phase 2: Equation ────────────────────────────────────────
 function renderEquations() {
+  document.getElementById('eqReveal').classList.remove('show');
+  document.getElementById('nextBtn').classList.remove('show');
+
   const p = PROBLEMS[groupProbs[curIdx]];
-  const correct = EQ_MAP[p.ask];
-  const btn = document.getElementById('eqBtns');
-  const shuffled = [...EQ_OPTIONS].sort(() => Math.random() - .5);
-  btn.innerHTML = '';
-  shuffled.forEach(eq => {
+  const correct = EQ_TMPL[p.ask];
+  const opts = [...EQ_ALL].sort(() => Math.random() - .5);
+
+  const wrap = document.getElementById('eqOptions');
+  wrap.innerHTML = '';
+  opts.forEach(eq => {
     const b = document.createElement('button');
-    b.className = 'eq-btn';
-    b.innerHTML = eqHtml(eq);
-    b.onclick = () => tryEq(b, eq, correct);
-    btn.appendChild(b);
+    b.className = 'eq-opt';
+    b.innerHTML = eqColorHtml(eq);
+    b.onclick = () => tryEq(b, eq, correct, p);
+    wrap.appendChild(b);
   });
 }
 
-function eqHtml(eq) {
-  return eq.replace(/開始時刻/g,'<span style="color:#e67700">開始時刻</span>')
-           .replace(/經過時間/g,'<span style="color:#4263eb">經過時間</span>')
-           .replace(/結束時刻/g,'<span style="color:#2f9e44">結束時刻</span>');
-}
+function tryEq(btn, eq, correct, p) {
+  if (document.getElementById('eqReveal').classList.contains('show')) return;
 
-function tryEq(btn, eq, correct) {
   if (eq === correct) {
     btn.classList.add('ok');
-    setTimeout(() => showPhase(4), 600);
+    // disable other options
+    document.querySelectorAll('.eq-opt').forEach(b => {
+      if (b !== btn) b.style.opacity = '.35';
+      b.style.pointerEvents = 'none';
+    });
+    showEqReveal(p);
+    doneCount++;
+    const total = groupProbs.length;
+    document.getElementById('progLabel').textContent = doneCount + ' / ' + total;
+    document.getElementById('progFill').style.width = (doneCount / total * 100) + '%';
+    document.getElementById('nextBtn').classList.add('show');
+    if (doneCount === total) setTimeout(showDone, 1400);
   } else {
     btn.classList.add('err');
-    setTimeout(() => btn.className = 'eq-btn', 400);
+    setTimeout(() => btn.className = 'eq-opt', 450);
   }
 }
 
-// ── Phase 4: numpad ──────────────────────────────────────────
-function renderNumpad() {
-  const p = PROBLEMS[groupProbs[curIdx]];
-  npH = ''; npM = ''; npPhase = p.ansType === 'min' ? 'm' : 'h';
+function showEqReveal(p) {
+  // build the concrete equation string with actual values + ？
+  const sv = (p.cards.find(c => c.slot === 'start')   || {}).val || '？';
+  const ev = (p.cards.find(c => c.slot === 'elapsed') || {}).val || '？';
+  const nv = (p.cards.find(c => c.slot === 'end')     || {}).val || '？';
 
-  updateAnsDisplay();
-
-  const grid = document.getElementById('npGrid');
-  grid.innerHTML = '';
-
-  // digits 1-9
-  [1,2,3,4,5,6,7,8,9].forEach(n => {
-    const b = document.createElement('button');
-    b.className = 'nk d';
-    b.textContent = n;
-    b.onclick = () => npDigit(n);
-    grid.appendChild(b);
-  });
-  // row 4: backspace, 0, confirm/next
-  const bs = document.createElement('button');
-  bs.className = 'nk bs'; bs.textContent = '⌫'; bs.onclick = npBack;
-  grid.appendChild(bs);
-
-  const z = document.createElement('button');
-  z.className = 'nk d'; z.textContent = '0'; z.onclick = () => npDigit(0);
-  grid.appendChild(z);
-
-  if (p.ansType === 'min') {
-    const ok = document.createElement('button');
-    ok.className = 'nk ok'; ok.id = 'npOk'; ok.textContent = '確認';
-    ok.onclick = checkAnswer;
-    grid.appendChild(ok);
+  let abstract, concrete;
+  if (p.ask === 'end') {
+    abstract = '開始時刻 ＋ 經過時間 ＝ <span style="color:#e67700">結束時刻</span>';
+    concrete = sv + ' ＋ ' + ev + ' ＝ <span class="qs">？</span>';
+  } else if (p.ask === 'elapsed') {
+    abstract = '結束時刻 － 開始時刻 ＝ <span style="color:#e67700">經過時間</span>';
+    concrete = nv + ' － ' + sv + ' ＝ <span class="qs">？</span>';
   } else {
-    const nxt = document.createElement('button');
-    nxt.className = 'nk nxt'; nxt.id = 'npNxt'; nxt.textContent = '→分';
-    nxt.onclick = npAdvance;
-    grid.appendChild(nxt);
+    abstract = '結束時刻 － 經過時間 ＝ <span style="color:#e67700">開始時刻</span>';
+    concrete = nv + ' － ' + ev + ' ＝ <span class="qs">？</span>';
   }
+
+  document.getElementById('eqAbstract').innerHTML = eqColorHtml(abstract);
+  document.getElementById('eqConcrete').innerHTML = concrete;
+  document.getElementById('eqReveal').classList.add('show');
 }
 
-function npDigit(d) {
-  const p = PROBLEMS[groupProbs[curIdx]];
-  if (npPhase === 'h') {
-    if (npH.length >= 2) return;
-    npH += d;
-    // auto-advance for time types when 2 digits entered
-    if (npH.length === 2) {
-      const nxt = document.getElementById('npNxt');
-      if (nxt) { nxt.className = 'nk ok'; nxt.textContent = '→分'; }
-    }
-  } else if (npPhase === 'm') {
-    if (npM.length >= 2) return;
-    npM += d;
-    if (p.ansType === 'min' && npM.length >= 1) {
-      const ok = document.getElementById('npOk');
-      if (ok) ok.disabled = false;
-    }
-  }
-  updateAnsDisplay();
-}
-
-function npBack() {
-  if (npPhase === 'm' && npM.length > 0) {
-    npM = npM.slice(0, -1);
-  } else if (npPhase === 'm' && npM.length === 0) {
-    const p = PROBLEMS[groupProbs[curIdx]];
-    if (p.ansType !== 'min') { npPhase = 'h'; npH = npH.slice(0, -1); }
-  } else {
-    npH = npH.slice(0, -1);
-  }
-  updateAnsDisplay();
-}
-
-function npAdvance() {
-  if (npH.length === 0) return;
-  npPhase = 'm';
-  const nxt = document.getElementById('npNxt');
-  if (nxt) { nxt.className = 'nk ok'; nxt.textContent = '確認'; nxt.onclick = checkAnswer; }
-  updateAnsDisplay();
-}
-
-function updateAnsDisplay() {
-  const p = PROBLEMS[groupProbs[curIdx]];
-  const el = document.getElementById('ansDisplay');
-  let html = '';
-  const prefix = p.ansPeriod === 'am' ? '<span class="prefix">上午</span>' :
-                 p.ansPeriod === 'pm' ? '<span class="prefix">下午</span>' : '';
-
-  if (p.ansType === 'min') {
-    const m = npM || '__';
-    html = '<span class="ph1">' + (npM || '_') + '</span><span class="prefix">分鐘</span>';
-  } else if (p.ansType === 'hm') {
-    const h = npH || '_';
-    const m = npPhase === 'h' ? '<span class="ph2">__</span>' :
-              (npM || '_') + '';
-    html = '<span class="' + (npPhase==='h'?'ph1':'ph-done') + '">' + h + '</span>'
-         + '<span class="prefix">小時</span>'
-         + '<span class="' + (npPhase==='m'?'ph1':'ph2') + '">' + (npPhase==='m'?(npM||'_'):'__') + '</span>'
-         + '<span class="prefix">分鐘</span>';
-  } else {
-    // time or time24
-    html = prefix
-         + '<span class="' + (npPhase==='h'?'ph1':'ph-done') + '">' + (npH||'_') + '</span>'
-         + '<span class="prefix">時</span>'
-         + '<span class="' + (npPhase==='m'?'ph1':'ph2') + '">'
-         + (npPhase==='m'? (npM.length===2?npM: npM.length===1?npM+'_':'__') : '__')
-         + '</span><span class="prefix">分</span>';
-  }
-  el.innerHTML = html;
-}
-
-function checkAnswer() {
-  const p = PROBLEMS[groupProbs[curIdx]];
-  let userH = parseInt(npH || '0');
-  let userM = parseInt(npM || '0');
-  if (isNaN(userH)) userH = 0;
-  if (isNaN(userM)) userM = 0;
-
-  const ok = (userH === p.ans.h && userM === p.ans.m);
-  const rb = document.getElementById('resultBox');
-  if (ok) {
-    rb.className = 'result-box ok';
-    document.getElementById('resultTitle').textContent = '答對了！';
-    document.getElementById('resultSub').textContent = '答案是 ' + p.ansLabel;
-    doneCount++;
-    document.getElementById('progLabel').textContent = doneCount + ' / ' + groupProbs.length;
-    document.getElementById('progFill').style.width = (doneCount / groupProbs.length * 100) + '%';
-    document.getElementById('nextBtn').classList.add('show');
-    // disable numpad
-    document.querySelectorAll('.nk').forEach(b => b.disabled = true);
-    if (doneCount === groupProbs.length) {
-      setTimeout(showDone, 1200);
-    }
-  } else {
-    rb.className = 'result-box err';
-    document.getElementById('resultTitle').textContent = '再試一次！';
-    document.getElementById('resultSub').textContent = '提示：答案是 ' + p.ansLabel.replace(/[0-9]/g, '?');
-    npH = ''; npM = '';
-    if (p.ansType !== 'min') npPhase = 'h';
-    updateAnsDisplay();
-  }
-}
-
+// ── Navigation ───────────────────────────────────────────────
 function nextProblem() {
   curIdx++;
-  if (curIdx >= groupProbs.length) {
-    showDone();
-  } else {
-    loadProblem();
-  }
+  if (curIdx >= groupProbs.length) showDone();
+  else loadProblem();
 }
 
 function showDone() {
   document.getElementById('mainCard').style.display = 'none';
-  const banner = document.getElementById('doneBanner');
-  banner.classList.add('show');
-  const start = curGroup * GROUP_SIZE + 1;
-  const end   = Math.min(start + GROUP_SIZE - 1, PROBLEMS.length);
-  document.getElementById('doneGroup').textContent = '第 ' + start + '–' + end + ' 題';
-  const nextBtn = document.getElementById('doneNext');
-  nextBtn.classList.toggle('hide', curGroup >= NUM_GROUPS - 1);
+  document.getElementById('doneBanner').classList.add('show');
+  const s = curGroup * GROUP_SIZE + 1;
+  const e = Math.min(s + GROUP_SIZE - 1, PROBLEMS.length);
+  document.getElementById('doneGroup').textContent = '第 ' + s + '–' + e + ' 題';
+  document.getElementById('doneNext').classList.toggle('hide', curGroup >= NUM_GROUPS - 1);
 }
 
 function goNextGroup() {
   if (curGroup < NUM_GROUPS - 1) { curGroup++; initGroup(); }
 }
 
-// ── Init ────────────────────────────────────────────────────
 buildGroupBar();
 initGroup();
 </script>
