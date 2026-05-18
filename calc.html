@@ -139,7 +139,7 @@
 
         <div class="clocks-row">
           <div class="clock-wrap">
-            <div class="clock-label">開始時間</div>
+            <div class="clock-label" id="startLabel">開始時間</div>
             <canvas id="cvsStart" width="150" height="150"></canvas>
           </div>
           <div class="arrow-mid">→</div>
@@ -203,6 +203,13 @@
       sH:9, sM:15, eH:8, eM:35,  typeLabel: '減法（借位）' },
     { text: '10 時 5 分  －  30 分  ＝ ？',
       sH:10, sM:5, eH:9, eM:35,  typeLabel: '減法（借位）' },
+    // 逆向題：已知結束時刻＋經過時間，回推開始時刻
+    { text: '？  ＋  30 分  ＝  8 時 50 分', dir:'bwd',
+      sH:8, sM:20, eH:8, eM:50,  typeLabel: '回推開始時刻（不跨整點）' },
+    { text: '？  ＋  35 分  ＝  8 時 15 分', dir:'bwd',
+      sH:7, sM:40, eH:8, eM:15,  typeLabel: '回推開始時刻（跨越整點）' },
+    { text: '？  ＋  1小時 30 分  ＝  13 時 20 分', dir:'bwd',
+      sH:11, sM:50, eH:13, eM:20, typeLabel: '回推開始時刻（含整小時）' },
   ];
 
   let cur = 0, input = '', ansStep = 'hour', ansH = null;
@@ -291,8 +298,8 @@
     ctx.fill();
   }
 
-  function animateClock(fromH, fromM, toH, toM) {
-    const ctx = document.getElementById('cvsEnd').getContext('2d');
+  function animateClock(fromH, fromM, toH, toM, canvasId) {
+    const ctx = document.getElementById(canvasId || 'cvsEnd').getContext('2d');
     const fromTotal = fromH * 60 + fromM;
     const toTotal   = toH   * 60 + toM;
     const t0 = performance.now();
@@ -321,8 +328,18 @@
 
     const sCtx = document.getElementById('cvsStart').getContext('2d');
     const eCtx = document.getElementById('cvsEnd').getContext('2d');
-    drawClock(sCtx, p.sH, p.sM, 'start');
-    drawClock(eCtx, 0, 0, 'unknown');
+    const isBackward = p.dir === 'bwd';
+    if (isBackward) {
+      drawClock(sCtx, 0, 0, 'unknown');        // 開始時刻未知（答案）
+      drawClock(eCtx, p.eH, p.eM, 'start');   // 結束時刻已知
+      document.getElementById('startLabel').textContent = '開始時間（？）';
+      document.getElementById('endLabel').textContent = '結束時間';
+    } else {
+      drawClock(sCtx, p.sH, p.sM, 'start');
+      drawClock(eCtx, 0, 0, 'unknown');
+      document.getElementById('startLabel').textContent = '開始時間';
+      document.getElementById('endLabel').textContent = '結束時間（？）';
+    }
 
     updateNp();
     updateAnsDisplay();
@@ -384,28 +401,37 @@
     } else {
       // Check both
       const ansM = val;
-      if (ansH === p.eH && ansM === p.eM) {
+      const isBackward = p.dir === 'bwd';
+      const correctH = isBackward ? p.sH : p.eH;
+      const correctM = isBackward ? p.sM : p.eM;
+
+      if (ansH === correctH && ansM === correctM) {
         // Correct!
         rb.className = 'result-box ok';
         document.getElementById('resultTitle').textContent = '✓ 答對了！';
         document.getElementById('resultSub').textContent =
-          p.text.replace('？', p.eH + ' 時 ' + p.eM + ' 分');
+          p.text.replace('？', correctH + ' 時 ' + correctM + ' 分');
         document.getElementById('hintBox').style.display = 'none';
-        animateClock(p.sH, p.sM, p.eH, p.eM);
+        // 逆向題：左鐘從結束時刻「倒撥」到開始時刻；正向題：右鐘從開始撥到結束
+        if (isBackward) {
+          animateClock(p.eH, p.eM, p.sH, p.sM, 'cvsStart');
+        } else {
+          animateClock(p.sH, p.sM, p.eH, p.eM, 'cvsEnd');
+        }
         const isLast = cur >= PROBS.length - 1;
         setTimeout(() => {
           document.getElementById('nextBtn').className = isLast ? 'next-btn' : 'next-btn show';
           if (isLast) setTimeout(() => { document.getElementById('doneBanner').className = 'done-banner show'; }, 300);
         }, 500);
         document.getElementById('ansDisplay').innerHTML =
-          '答案：<span class="filed">' + p.eH + ' 時 ' + p.eM + ' 分</span>';
+          '答案：<span class="filed">' + correctH + ' 時 ' + correctM + ' 分</span>';
       } else {
         // Wrong
         rb.className = 'result-box err';
         document.getElementById('resultTitle').textContent = '× 再想想看！';
         document.getElementById('resultSub').textContent =
-          (ansH !== p.eH ? '時的部分要再想一下 ' : '') +
-          (ansM !== p.eM ? '分的部分要再想一下' : '');
+          (ansH !== correctH ? '時的部分要再想一下 ' : '') +
+          (ansM !== correctM ? '分的部分要再想一下' : '');
         // Reset answer step
         ansH = null; ansStep = 'hour';
         updateAnsDisplay();
