@@ -97,6 +97,8 @@
     .val-card { border: 2px solid #a5d8ff; border-radius: 12px; padding: 10px 14px;
                 font-size: 14px; font-weight: bold; color: #555; cursor: pointer;
                 background: #f0f8ff; transition: all .2s; user-select: none; }
+    .val-card.unk-card { border-color: #ffa94d; background: #fff4e6; color: #e67700;
+                         font-size: 20px; }
     .val-card.selected { border-color: #20c997; background: #e6fcf5; color: #20c997;
                          box-shadow: 0 0 0 3px rgba(32,201,151,.2); }
     .val-card.gone { visibility: hidden; pointer-events: none; }
@@ -414,24 +416,23 @@ function renderTimeline() {
   placedCards = {};
   selectedCard = null;
 
+  // all 3 slots start empty
   ['start', 'elapsed', 'end'].forEach(slot => {
     const el = document.getElementById('slot' + cap(slot));
-    if (slot === p.ask) {
-      el.textContent = '？';
-      el.className = 'tl-slot unknown';
-      placedCards[slot] = '?';
-    } else {
-      el.textContent = '點我放入';
-      el.className = 'tl-slot active';
-      placedCards[slot] = null;
-    }
+    el.textContent = '點我放入';
+    el.className = 'tl-slot active';
+    placedCards[slot] = null;
   });
+
+  // 3 cards: 2 known + 1 "？" for the unknown slot, shuffled
+  window._curCards = [...p.cards, {val:'？', slot: p.ask}]
+    .sort(() => Math.random() - .5);
 
   const pool = document.getElementById('cardPool');
   pool.innerHTML = '';
-  p.cards.forEach((c, i) => {
+  window._curCards.forEach((c, i) => {
     const d = document.createElement('div');
-    d.className = 'val-card';
+    d.className = 'val-card' + (c.val === '？' ? ' unk-card' : '');
     d.textContent = c.val;
     d.dataset.idx = i;
     d.onclick = () => selectCard(i);
@@ -459,7 +460,7 @@ function placeCard(slot) {
     return;  // just remind to pick a card first, no penalty
   }
 
-  const card = p.cards[selectedCard];
+  const card = window._curCards[selectedCard];
   if (card.slot === slot) {
     el.textContent = card.val;
     el.className = 'tl-slot locked-' + slot;
@@ -468,7 +469,7 @@ function placeCard(slot) {
     selectedCard = null;
     document.querySelectorAll('.val-card').forEach(c => c.classList.remove('selected'));
 
-    const allDone = p.cards.every(c => placedCards[c.slot] !== null);
+    const allDone = window._curCards.every(c => placedCards[c.slot] !== null);
     if (allDone) setTimeout(() => showPhase(2), 500);
   } else {
     el.classList.add('err');
