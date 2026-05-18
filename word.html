@@ -342,7 +342,6 @@ let curGroup   = 0;
 let groupProbs = [];
 let curIdx     = 0;
 let phase      = 1;
-let doneCount  = 0;
 
 let selectedCard = null;
 let placedCards  = {};  // {start|elapsed|end: val|null}
@@ -376,7 +375,7 @@ function initGroup() {
     [arr[i], arr[j]] = [arr[j], arr[i]];
   }
   groupProbs = arr;
-  curIdx = 0; doneCount = 0;
+  curIdx = 0;
   document.getElementById('mainCard').style.display = '';
   document.getElementById('doneBanner').classList.remove('show');
   loadProblem();
@@ -387,9 +386,7 @@ function loadProblem() {
   const p = PROBLEMS[groupProbs[curIdx]];
   phase = 1; selectedCard = null; placedCards = {};
 
-  const total = groupProbs.length;
-  document.getElementById('progLabel').textContent = doneCount + ' / ' + total;
-  document.getElementById('progFill').style.width = (doneCount / total * 100) + '%';
+  updateProgress(curIdx);
 
   document.getElementById('probText').textContent = p.text;
 
@@ -459,7 +456,7 @@ function placeCard(slot) {
   if (selectedCard === null) {
     el.classList.add('err');
     setTimeout(() => { el.classList.remove('err'); el.classList.add('active'); }, 400);
-    return;
+    return;  // just remind to pick a card first, no penalty
   }
 
   const card = p.cards[selectedCard];
@@ -475,7 +472,7 @@ function placeCard(slot) {
     if (allDone) setTimeout(() => showPhase(2), 500);
   } else {
     el.classList.add('err');
-    setTimeout(() => { el.classList.remove('err'); el.classList.add('active'); }, 400);
+    setTimeout(goBack, 400);
   }
 }
 
@@ -510,15 +507,11 @@ function tryEq(btn, eq, correct, p) {
       b.style.pointerEvents = 'none';
     });
     showEqReveal(p);
-    doneCount++;
-    const total = groupProbs.length;
-    document.getElementById('progLabel').textContent = doneCount + ' / ' + total;
-    document.getElementById('progFill').style.width = (doneCount / total * 100) + '%';
+    updateProgress(curIdx + 1);
     document.getElementById('nextBtn').classList.add('show');
-    if (doneCount === total) setTimeout(showDone, 1400);
   } else {
     btn.classList.add('err');
-    setTimeout(() => btn.className = 'eq-opt', 450);
+    setTimeout(goBack, 450);
   }
 }
 
@@ -543,6 +536,18 @@ function showEqReveal(p) {
   document.getElementById('eqAbstract').innerHTML = eqColorHtml(abstract);
   document.getElementById('eqConcrete').innerHTML = concrete;
   document.getElementById('eqReveal').classList.add('show');
+}
+
+// ── Helpers ──────────────────────────────────────────────────
+function updateProgress(n) {
+  const total = groupProbs.length;
+  document.getElementById('progLabel').textContent = n + ' / ' + total;
+  document.getElementById('progFill').style.width = (n / total * 100) + '%';
+}
+
+function goBack() {
+  curIdx = Math.max(0, curIdx - 1);
+  loadProblem();
 }
 
 // ── Navigation ───────────────────────────────────────────────
