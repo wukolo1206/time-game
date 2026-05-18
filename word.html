@@ -137,6 +137,11 @@
 
     .phase-sec { display: flex; flex-direction: column; gap: 14px; }
 
+    .two-col { display: flex; gap: 14px; align-items: flex-start; }
+    .col-left  { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+    .col-right { flex: 1; min-width: 0; }
+    @media (max-width: 500px) { .two-col { flex-direction: column; } }
+
     @keyframes shake  { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-7px)} 75%{transform:translateX(7px)} }
     @keyframes pulse  { 0%,100%{box-shadow:0 0 0 0 rgba(32,201,151,.4)} 50%{box-shadow:0 0 0 8px rgba(32,201,151,0)} }
     @keyframes popIn  { 0%{transform:scale(.7);opacity:0} 100%{transform:scale(1);opacity:1} }
@@ -168,37 +173,41 @@
   <div class="main-card" id="mainCard">
     <div class="prob-text" id="probText"></div>
 
-    <!-- Timeline placement -->
-    <div class="phase-sec">
-      <div class="tl-prompt">把數值放到正確的格子裡</div>
-      <div class="timeline">
-        <div class="tl-col">
-          <div class="tl-lbl start">開始時刻</div>
-          <div class="tl-slot" id="slotStart" onclick="placeCard('start')">點我放入</div>
+    <div class="two-col">
+      <!-- Left: timeline + cards -->
+      <div class="col-left">
+        <div class="tl-prompt">把數值放到正確的格子裡</div>
+        <div class="timeline">
+          <div class="tl-col">
+            <div class="tl-lbl start">開始時刻</div>
+            <div class="tl-slot" id="slotStart" onclick="placeCard('start')">點我放入</div>
+          </div>
+          <div class="tl-arrow">→</div>
+          <div class="tl-col">
+            <div class="tl-lbl elapsed">經過時間</div>
+            <div class="tl-slot" id="slotElapsed" onclick="placeCard('elapsed')">點我放入</div>
+          </div>
+          <div class="tl-arrow">→</div>
+          <div class="tl-col">
+            <div class="tl-lbl end">結束時刻</div>
+            <div class="tl-slot" id="slotEnd" onclick="placeCard('end')">點我放入</div>
+          </div>
         </div>
-        <div class="tl-arrow">→</div>
-        <div class="tl-col">
-          <div class="tl-lbl elapsed">經過時間</div>
-          <div class="tl-slot" id="slotElapsed" onclick="placeCard('elapsed')">點我放入</div>
-        </div>
-        <div class="tl-arrow">→</div>
-        <div class="tl-col">
-          <div class="tl-lbl end">結束時刻</div>
-          <div class="tl-slot" id="slotEnd" onclick="placeCard('end')">點我放入</div>
-        </div>
+        <div class="card-pool" id="cardPool"></div>
       </div>
-      <div class="card-pool" id="cardPool"></div>
-    </div>
 
-    <!-- Equation section: hidden until timeline complete -->
-    <div class="phase-sec" id="eqSection" style="display:none">
-      <div class="eq-prompt">選出正確的算式結構</div>
-      <div class="eq-options" id="eqOptions"></div>
-      <div class="eq-reveal" id="eqReveal">
-        <div class="eq-abstract" id="eqAbstract"></div>
-        <div class="eq-concrete" id="eqConcrete"></div>
+      <!-- Right: equation (appears after timeline done) -->
+      <div class="col-right">
+        <div class="phase-sec" id="eqSection" style="display:none">
+          <div class="eq-prompt">選出正確的算式結構</div>
+          <div class="eq-options" id="eqOptions"></div>
+          <div class="eq-reveal" id="eqReveal">
+            <div class="eq-abstract" id="eqAbstract"></div>
+            <div class="eq-concrete" id="eqConcrete"></div>
+          </div>
+          <button class="next-btn" id="nextBtn" onclick="nextProblem()">下一題 →</button>
+        </div>
       </div>
-      <button class="next-btn" id="nextBtn" onclick="nextProblem()">下一題 →</button>
     </div>
   </div>
 
