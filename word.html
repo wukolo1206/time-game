@@ -450,7 +450,6 @@ function selectCard(idx) {
 
 function placeCard(slot) {
   const p = PROBLEMS[groupProbs[curIdx]];
-  if (slot === p.ask) return;
   if (placedCards[slot] !== null) return;
 
   const el = document.getElementById('slot' + cap(slot));
